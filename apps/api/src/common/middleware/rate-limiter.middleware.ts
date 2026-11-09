@@ -9,16 +9,26 @@ interface LimiterOptions {
   windowMs: number;
   max: number;
   message: string;
+  /** Count only failed (status >= 400) requests. */
+  skipSuccessfulRequests?: boolean;
   handler?: Options["handler"];
 }
 
 /** Factory so every limiter shares the same Redis store + header conventions. */
-const createRateLimiter = ({ prefix, windowMs, max, message, handler }: LimiterOptions) =>
+const createRateLimiter = ({
+  prefix,
+  windowMs,
+  max,
+  message,
+  skipSuccessfulRequests = false,
+  handler,
+}: LimiterOptions) =>
   rateLimit({
     windowMs,
     limit: max,
     standardHeaders: true,
     legacyHeaders: false,
+    skipSuccessfulRequests,
     store: new RedisStore({
       sendCommand: (command: string, ...args: string[]) =>
         redis.call(command, ...args) as Promise<never>,
@@ -51,7 +61,20 @@ export const strictAuthLimiter = createRateLimiter({
   prefix: "rl_strict_auth:",
   windowMs: 15 * MINUTE,
   max: 5,
+  // Only FAILED attempts count, so legitimate users are never locked out by their own successful logins
+  skipSuccessfulRequests: true,
   message: "Too many failed attempts. Please try again after 15 minutes.",
+});
+
+/**
+ * Endpoints that always answer 200 (to avoid user enumeration) but send an email:
+ * every call counts, otherwise they could be used to spam someone's inbox.
+ */
+export const emailActionLimiter = createRateLimiter({
+  prefix: "rl_email_action:",
+  windowMs: 15 * MINUTE,
+  max: 5,
+  message: "Too many requests. Please try again after 15 minutes.",
 });
 
 const OAUTH_LIMIT_MESSAGE = "Too many authentication attempts, please try again after 1 minute";

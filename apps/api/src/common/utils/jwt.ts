@@ -7,6 +7,8 @@ import type { UserRole } from "../constants/roles";
 export interface AccessTokenPayload {
   id: string;
   role: UserRole;
+  /** Session id: lets the API reject a token the moment its session is revoked. */
+  sid: string;
 }
 export interface RefreshTokenPayload {
   id: string;
@@ -36,11 +38,6 @@ export const generateRefreshToken = (payload: RefreshTokenPayload) =>
 
 export const verifyRefreshToken = (token: string) =>
   jwt.verify(token, config.jwt.refreshSecret, { algorithms: ["HS256"] }) as RefreshTokenPayload;
-
-export const generateAuthTokens = (user: { id: string; role: UserRole }) => ({
-  accessToken: generateAccessToken({ id: user.id, role: user.role }),
-  refreshToken: generateRefreshToken({ id: user.id }),
-});
 
 // ── Short-lived MFA challenge token ─────────────────────────
 // Signed with a DERIVED secret + distinct audience, so a challenge token (issued after the

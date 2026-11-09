@@ -13,6 +13,7 @@ import { serverRouter, createContext } from "@repo/trpc/server";
 import { config } from "./common/config/env.config";
 import { globalLimiter } from "./common/middleware/rate-limiter.middleware";
 import { errorHandler, notFoundHandler } from "./common/middleware/error.middleware";
+import authRoutes from "./modules/auth/auth.routes";
 
 export const app = express();
 
@@ -58,9 +59,9 @@ app.get("/openapi.json", (_req, res) => {
 logger.debug(`docs: ${config.app.baseUrl}/docs`);
 app.use("/docs", apiReference({ url: "/openapi.json" }));
 
-// ── Feature modules (REST) are mounted here, e.g.:
-//   app.use("/api/auth", authRoutes);
-//   app.use("/", oidcRoutes);
+// ── Feature modules (REST). Must come BEFORE the template tRPC/OpenAPI router on /api.
+app.use("/api/auth", authRoutes);
+// app.use("/", oidcRoutes);  (OIDC module: later step)
 
 // ── tRPC / OpenAPI ──────────────────────────────────────────
 app.use("/api", createOpenApiExpressMiddleware({ router: serverRouter, createContext }));
