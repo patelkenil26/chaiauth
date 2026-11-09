@@ -36,3 +36,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# ChaiAuth signing keys (generate with scripts/generate-keys.sh)
+cert/

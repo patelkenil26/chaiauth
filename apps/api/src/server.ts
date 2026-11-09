@@ -1,6 +1,8 @@
 import express from "express";
-import { logger } from "@repo/logger";
 import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import { logger } from "@repo/logger";
 
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to-openapi";
@@ -8,61 +10,64 @@ import { apiReference } from "@scalar/express-api-reference";
 
 import { serverRouter, createContext } from "@repo/trpc/server";
 
-import { env } from "./env";
+import { config } from "./common/config/env.config";
+import { globalLimiter } from "./common/middleware/rate-limiter.middleware";
+import { errorHandler, notFoundHandler } from "./common/middleware/error.middleware";
 
 export const app = express();
+
+// We sit behind a reverse proxy (Caddy / load balancer): trust the first hop for req.ip
+app.set("trust proxy", 1);
+
 const openApiDocument = generateOpenApiDocument(serverRouter, {
   title: "ChaiAuth OpenAPI",
   version: "1.0.0",
-  baseUrl: env.BASE_URL.concat("/api"),
+  baseUrl: config.app.baseUrl.concat("/api"),
 });
 
-const allowedOrigins = env.ALLOWED_ORIGINS.split(",")
-  .map((o) => o.trim().replace(/\/+$/, ""))
-  .filter(Boolean);
-
+// ── Security & parsing ──────────────────────────────────────
+app.use(helmet());
 app.use(
   cors({
     // Requests without an Origin (curl, server-to-server) are allowed;
     // browsers must come from an allow-listed origin.
     origin: (origin, callback) =>
-      callback(null, !origin || allowedOrigins.includes(origin)),
+      callback(null, !origin || config.app.allowedOrigins.includes(origin)),
     credentials: true,
   }),
 );
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  return res.json({ message: "ChaiAuth is up and running..." });
+// ── Health (before rate limiting so probes never get throttled) ──
+app.get("/", (_req, res) => {
+  res.json({ message: "ChaiAuth is up and running..." });
+});
+app.get("/health", (_req, res) => {
+  res.json({ message: "ChaiAuth server is healthy", healthy: true });
 });
 
-app.get("/health", (req, res) => {
-  return res.json({ message: "ChaiAuth server is healthy", healthy: true });
-});
+app.use(globalLimiter);
 
-logger.debug(`openapi.json: ${env.BASE_URL}/openapi.json`);
-app.get("/openapi.json", (req, res) => {
-  return res.json(openApiDocument);
+// ── API docs ────────────────────────────────────────────────
+logger.debug(`openapi.json: ${config.app.baseUrl}/openapi.json`);
+app.get("/openapi.json", (_req, res) => {
+  res.json(openApiDocument);
 });
-
-logger.debug(`docs: ${env.BASE_URL}/docs`);
+logger.debug(`docs: ${config.app.baseUrl}/docs`);
 app.use("/docs", apiReference({ url: "/openapi.json" }));
 
-app.use(
-  "/api",
-  createOpenApiExpressMiddleware({
-    router: serverRouter,
-    createContext,
-  }),
-);
+// ── Feature modules (REST) are mounted here, e.g.:
+//   app.use("/api/auth", authRoutes);
+//   app.use("/", oidcRoutes);
 
-app.use(
-  "/trpc",
-  trpcExpress.createExpressMiddleware({
-    router: serverRouter,
-    createContext,
-  }),
-);
+// ── tRPC / OpenAPI ──────────────────────────────────────────
+app.use("/api", createOpenApiExpressMiddleware({ router: serverRouter, createContext }));
+app.use("/trpc", trpcExpress.createExpressMiddleware({ router: serverRouter, createContext }));
+
+// ── Errors (must be last) ───────────────────────────────────
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
