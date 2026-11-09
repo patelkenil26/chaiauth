@@ -36,3 +36,10 @@ export const resetSchema = z.object({
 });
 
 export type ResetForm = z.infer<typeof resetSchema>;
+
+export const magicLinkSchema = z.object({
+  email: emailValidation,
+  captchaToken: z.string().min(1, "Please complete the anti-bot verification"),
+});
+
+export type MagicLinkFormData = z.infer<typeof magicLinkSchema>;

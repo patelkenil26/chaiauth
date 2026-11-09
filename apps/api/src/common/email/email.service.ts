@@ -2,6 +2,7 @@ import { config } from "../config/env.config";
 import { emailProvider } from "./email.provider";
 import {
   dataExportEmail,
+  magicLinkEmail,
   developerAppRegisteredEmail,
   otpEmail,
   passwordChangedEmail,
@@ -53,6 +54,13 @@ export const emailService = {
       to,
       subject: "OAuth App Registered",
       html: developerAppRegisteredEmail(appName, clientId),
+    }),
+
+  sendMagicLinkEmail: (to: string, token: string) =>
+    emailProvider.send({
+      to,
+      subject: "Your ChaiAuth sign-in link",
+      html: magicLinkEmail(frontendUrl("/magic-link", token)),
     }),
 
   sendOtpEmail: (to: string, otp: string, appName?: string) =>

@@ -4,10 +4,12 @@ import { useCopy } from "@/shared/hooks/useCopy";
 
 interface SecretModalProps {
   secret: { name: string; value: string };
+  /** What is being shown, used in the copy. Defaults to a client secret. */
+  kind?: "client secret" | "API key";
   onClose: () => void;
 }
 
-export function SecretModal({ secret, onClose }: SecretModalProps) {
+export function SecretModal({ secret, kind = "client secret", onClose }: SecretModalProps) {
   const { copied, copy } = useCopy();
 
   return (
@@ -20,12 +22,12 @@ export function SecretModal({ secret, onClose }: SecretModalProps) {
           {secret.name} is ready
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Copy this client secret now. It will not be shown again after you close this dialog.
+          Copy this {kind} now. It will not be shown again after you close this dialog.
         </p>
         
         <div className="mt-5 flex items-center gap-2 rounded-md border border-primary/35 bg-background/60 p-3">
           <code className="ca-mono min-w-0 flex-1 break-all text-sm text-foreground">{secret.value}</code>
-          <button aria-label="Copy client secret" className="shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors" onClick={() => copy(secret.value, "Client secret")}>
+          <button aria-label={`Copy ${kind}`} className="shrink-0 p-1.5 text-muted-foreground hover:text-foreground transition-colors" onClick={() => copy(secret.value, kind === "API key" ? "API key" : "Client secret")}>
             {copied === secret.value ? (
               <Check className="h-5 w-5 text-good" />
             ) : (
@@ -36,11 +38,11 @@ export function SecretModal({ secret, onClose }: SecretModalProps) {
         
         <div className="mt-4 flex gap-3 rounded-md border border-primary/30 bg-accent p-3 text-xs leading-5 text-muted-foreground">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> 
-          Never put this secret in browser code or commit it to source control.
+          Never put this {kind} in browser code or commit it to source control.
         </div>
         
         <button className="ca-btn ca-btn-primary mt-6 w-full" onClick={onClose}>
-          I've saved the secret
+          I&apos;ve saved the {kind}
         </button>
       </section>
     </div>

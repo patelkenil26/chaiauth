@@ -1,7 +1,8 @@
-import { db, eq, and, or } from "@repo/database";
+import { db, eq, and, or, isNull, count } from "@repo/database";
 import {
   clientsTable,
   consentsTable,
+  usersTable,
   type InsertClient,
   type SelectClient,
 } from "@repo/database/schema";
@@ -70,5 +71,53 @@ export const clientRepository = {
       .insert(consentsTable)
       .values({ userId, clientId, scopes })
       .onConflictDoUpdate({ target: [consentsTable.userId, consentsTable.clientId], set: { scopes } });
+  },
+
+  // ── Users who granted this client access (server API) ──────
+  /** Consent joined with the (non-deleted) user. Callers limit the fields exposed to the granted scopes. */
+  async listConsentedUsers(clientId: string, limit: number, offset: number) {
+    const where = and(eq(consentsTable.clientId, clientId), isNull(usersTable.deletedAt));
+
+    const rows = await db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+        isVerified: usersTable.isVerified,
+        scopes: consentsTable.scopes,
+        grantedAt: consentsTable.createdAt,
+      })
+      .from(consentsTable)
+      .innerJoin(usersTable, eq(consentsTable.userId, usersTable.id))
+      .where(where)
+      .orderBy(consentsTable.createdAt, usersTable.id)
+      .limit(limit)
+      .offset(offset);
+
+    const [total] = await db
+      .select({ value: count() })
+      .from(consentsTable)
+      .innerJoin(usersTable, eq(consentsTable.userId, usersTable.id))
+      .where(where);
+
+    return { rows, total: total?.value ?? 0 };
+  },
+
+  async findConsentedUser(clientId: string, userId: string) {
+    const [row] = await db
+      .select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+        isVerified: usersTable.isVerified,
+        scopes: consentsTable.scopes,
+        grantedAt: consentsTable.createdAt,
+      })
+      .from(consentsTable)
+      .innerJoin(usersTable, eq(consentsTable.userId, usersTable.id))
+      .where(
+        and(eq(consentsTable.clientId, clientId), eq(consentsTable.userId, userId), isNull(usersTable.deletedAt)),
+      );
+    return row;
   },
 };

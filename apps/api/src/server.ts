@@ -15,6 +15,7 @@ import { globalLimiter } from "./common/middleware/rate-limiter.middleware";
 import { errorHandler, notFoundHandler } from "./common/middleware/error.middleware";
 import authRoutes from "./modules/auth/auth.routes";
 import oidcRoutes from "./modules/oidc/oidc.routes";
+import apiKeyRoutes from "./modules/api-keys/api-keys.routes";
 
 export const app = express();
 
@@ -72,6 +73,7 @@ app.use("/docs", apiReference({ url: "/openapi.json" }));
 // ── Feature modules (REST). Must come BEFORE the template tRPC/OpenAPI router on /api.
 app.use("/api/auth", authRoutes);
 app.use("/", oidcRoutes);
+app.use("/", apiKeyRoutes);
 
 // ── tRPC / OpenAPI ──────────────────────────────────────────
 app.use("/api", createOpenApiExpressMiddleware({ router: serverRouter, createContext }));

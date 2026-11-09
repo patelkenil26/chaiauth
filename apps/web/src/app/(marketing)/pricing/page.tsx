@@ -19,7 +19,7 @@ const plans = [
     cta: "Get started",
     href: "/register",
     highlight: false,
-    items: ["Up to 3 applications", "Email, Google & GitHub login", "TOTP MFA & passkeys", "Community support"],
+    items: ["Up to 3 applications", "Email, magic link, Google & GitHub login", "TOTP MFA & passkeys", "Community support"],
   },
   {
     name: "Pro",

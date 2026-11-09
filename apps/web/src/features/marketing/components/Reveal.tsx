@@ -19,8 +19,9 @@ export function Reveal({ children, delay = 0, className = "", as: Tag = "div" }:
     const el = ref.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
-      setShown(true);
-      return;
+      // Very old browsers: just show the content (asynchronously, not inside the effect body)
+      const raf = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(raf);
     }
     const io = new IntersectionObserver(
       ([entry]) => {

@@ -14,7 +14,7 @@ export const authApi = {
   logout: async () => {
     return apiClient.post("/auth/logout");
   },
-  forgotPassword: async (data: { email: string }) => {
+  forgotPassword: async (data: { email: string; captchaToken: string }) => {
     return apiClient.post("/auth/forgot-password", data);
   },
   resetPassword: async (token: string, data: { password: string }) => {
@@ -25,6 +25,12 @@ export const authApi = {
   },
   authorizeSubmit: async (data: any) => {
     return apiClient.post("/o/authorize", data);
+  },
+  requestMagicLink: async (data: { email: string; captchaToken: string }) => {
+    return apiClient.post("/auth/magic-link", data);
+  },
+  verifyMagicLink: async (data: { token: string }) => {
+    return apiClient.post("/auth/magic-link/verify", data);
   },
   sendOtp: async (data: { email?: string; phone?: string }) => {
     return apiClient.post("/auth/send-otp", data);

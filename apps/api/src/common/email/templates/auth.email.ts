@@ -26,6 +26,23 @@ export const verificationEmail = (url: string) =>
     "Action required to activate your ChaiAuth account.",
   );
 
+export const magicLinkEmail = (url: string) =>
+  baseTemplate(
+    "Your sign-in link",
+    [
+      icon("key", "f97316"),
+      heading("Sign in to ChaiAuth"),
+      paragraph(
+        "Click the button below to sign in. This link works once and expires in <strong style=\"color: #ffffff;\">15 minutes</strong>.",
+      ),
+      ctaButton(url, "Sign in"),
+      smallPrint(
+        "If you didn't request this link, you can safely ignore this email. Nobody can sign in without access to it.",
+      ),
+    ].join(""),
+    "Your one-time sign-in link for ChaiAuth.",
+  );
+
 export const resetPasswordEmail = (url: string) =>
   baseTemplate(
     "Reset your password",

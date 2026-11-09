@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Loader2, Eye, EyeOff, Mail, Fingerprint } from "lucide-react";
 import { useLogin } from "../hooks/useLogin";
 import { Captcha } from "@/shared/components/ui/Captcha";
+import { MagicLinkForm } from "./MagicLinkForm";
 
 export function LoginForm() {
   const {
@@ -20,6 +21,12 @@ export function LoginForm() {
     onGithubLogin,
     onPasskeyLogin
   } = useLogin();
+
+  const [magicLinkMode, setMagicLinkMode] = useState(false);
+
+  if (magicLinkMode) {
+    return <MagicLinkForm onBack={() => setMagicLinkMode(false)} />;
+  }
 
   if (requiresMfa) {
     return (
@@ -180,8 +187,8 @@ export function LoginForm() {
         </button>
         
         <div className="grid grid-cols-2 gap-2.5">
-          <button type="button" disabled title="Coming soon" className="ca-btn ca-btn-ghost opacity-60">
-            <Mail className="h-4 w-4" /> Magic link <span className="ca-soon">Soon</span>
+          <button type="button" onClick={() => setMagicLinkMode(true)} className="ca-btn ca-btn-ghost">
+            <Mail className="h-4 w-4" /> Email link
           </button>
           <button type="button" onClick={onPasskeyLogin} className="ca-btn ca-btn-ghost">
             <Fingerprint className="h-4 w-4" /> Passkey

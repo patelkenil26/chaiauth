@@ -47,7 +47,32 @@ export const consentsTable = pgTable(
   (t) => [unique("consents_user_client_unique").on(t.userId, t.clientId)],
 );
 
+/**
+ * Server-to-server API keys of a registered application.
+ * Only the SHA-256 hash is stored; the raw key is shown to the developer once.
+ */
+export const apiKeysTable = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clientId: varchar("client_id", { length: 255 })
+      .notNull()
+      .references(() => clientsTable.clientId, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    // First characters of the key, safe to display so a key can be recognised in a list
+    keyPrefix: varchar("key_prefix", { length: 24 }).notNull(),
+    keyHash: varchar("key_hash", { length: 64 }).notNull().unique(),
+    lastUsedAt: timestamp("last_used_at"),
+    expiresAt: timestamp("expires_at"),
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("api_keys_client_id_idx").on(t.clientId)],
+);
+
 export type SelectClient = typeof clientsTable.$inferSelect;
 export type InsertClient = typeof clientsTable.$inferInsert;
 export type SelectConsent = typeof consentsTable.$inferSelect;
 export type InsertConsent = typeof consentsTable.$inferInsert;
+export type SelectApiKey = typeof apiKeysTable.$inferSelect;
+export type InsertApiKey = typeof apiKeysTable.$inferInsert;

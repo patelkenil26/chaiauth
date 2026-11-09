@@ -2,6 +2,7 @@ import React from "react";
 import { Blocks, Trash2, Check, Clipboard, ExternalLink } from "lucide-react";
 import { useCopy } from "@/shared/hooks/useCopy";
 import type { OAuthApp } from "../types";
+import { ApiKeysPanel } from "./ApiKeysPanel";
 
 interface AppCardProps {
   app: OAuthApp;
@@ -96,6 +97,8 @@ export function AppCard({ app, onEdit, onDelete }: AppCardProps) {
           })}
         </div>
       </div>
+
+      <ApiKeysPanel clientId={app.clientId} />
     </article>
   );
 }

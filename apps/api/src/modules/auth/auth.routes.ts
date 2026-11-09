@@ -7,6 +7,7 @@ import * as controller from "./auth.controller";
 import { authenticate } from "./auth.middleware";
 import { dataExportRequestDto, updateProfileDto } from "./dto/account.dto";
 import { loginDto } from "./dto/login.dto";
+import { magicLinkRequestDto, magicLinkVerifyDto } from "./dto/magic-link.dto";
 import { sendOtpDto } from "./dto/otp.dto";
 import {
   forgotPasswordDto,
@@ -28,6 +29,14 @@ const router = Router();
 router.post("/register", authLimiter, verifyCaptcha, validate({ body: registerDto }), controller.register);
 router.post("/login", strictAuthLimiter, verifyCaptcha, validate({ body: loginDto }), controller.login);
 router.post("/login/mfa", strictAuthLimiter, validate({ body: mfaLoginDto }), mfaController.loginWithMfa);
+router.post(
+  "/magic-link",
+  emailActionLimiter,
+  verifyCaptcha,
+  validate({ body: magicLinkRequestDto }),
+  controller.requestMagicLink,
+);
+router.post("/magic-link/verify", strictAuthLimiter, validate({ body: magicLinkVerifyDto }), controller.verifyMagicLink);
 router.post("/send-otp", emailActionLimiter, validate({ body: sendOtpDto }), controller.sendOtp);
 router.post("/refresh-token", authLimiter, controller.refreshToken);
 router.post("/logout", authenticate, controller.logout);

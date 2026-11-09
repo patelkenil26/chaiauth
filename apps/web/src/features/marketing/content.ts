@@ -1,6 +1,6 @@
 import {
   KeyRound, Fingerprint, ShieldCheck, Smartphone, Users, Share2, Download,
-  MonitorSmartphone, Code2, Mail, Lock, Activity, Globe, type LucideIcon,
+  MonitorSmartphone, Code2, Mail, Lock, Activity, Globe, Link2, Blocks, type LucideIcon,
 } from "lucide-react";
 
 export const navLinks = [
@@ -56,6 +56,9 @@ export const features: Feature[] = [
   { icon: MonitorSmartphone, title: "Sessions & devices", description: "See every active session with device and IP details, and revoke any of them instantly." },
   { icon: Activity, title: "Security activity", description: "A timeline of sign-ins and sensitive changes so you notice anything unusual." },
   { icon: Download, title: "Data export & deletion", description: "Your data belongs to you. Export it or delete your account whenever you want." },
+  { icon: Link2, title: "Magic links", description: "Passwordless sign-in with a one-time email link that works once, expires in 15 minutes and still respects MFA." },
+  { icon: KeyRound, title: "API keys & server API", description: "Create hashed, expiring, revocable keys per application and read the users who approved your app from your backend." },
+  { icon: Blocks, title: "React SDK", description: "Drop in <SignIn /> and <UserButton /> with hooks. PKCE, token refresh and sign-out are handled for you." },
 ];
 
 export const stats = [
@@ -76,8 +79,8 @@ export const securityPillars: Feature[] = [
 
 export const faqs = [
   { q: "Is ChaiAuth a replacement for NextAuth / Auth.js?", a: "ChaiAuth is an identity provider. You can plug it into NextAuth (or any OIDC library) as a provider, or later use our SDK directly." },
-  { q: "Which login methods are supported today?", a: "Email + password, Google, GitHub, TOTP-based MFA and passkeys." },
+  { q: "Which login methods are supported today?", a: "Email + password, magic links, Google, GitHub, TOTP-based MFA and passkeys." },
   { q: "Can I self-host it?", a: "The project is a monorepo (API + web) backed by PostgreSQL and Redis, so you can run it on your own infrastructure." },
-  { q: "Is there an SDK?", a: "A React SDK with <SignIn /> and <UserButton /> components is on the roadmap. Until then, use standard OIDC." },
+  { q: "Is there an SDK?", a: "Yes: @chaiauth/react gives you <SignIn />, <UserButton /> and hooks, built on standard OIDC with PKCE. Any other stack can use plain OpenID Connect." },
   { q: "How do I get client credentials?", a: "Create an account, open the Developer console, and register an application to get a client ID and secret." },
 ];

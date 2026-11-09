@@ -31,6 +31,7 @@ export const pageMetadata = {
   verifyEmail: { title: "Verify Email", description: "Verifying your email address" },
   resetPassword: { title: "Reset Password", description: "Set a new password for your account" },
   forgotPassword: { title: "Reset your password", description: "Request a secure link to reset your ChaiAuth password." },
+  magicLink: { title: "Signing you in", description: "Completing your passwordless sign-in." },
   checkEmail: { title: "Check your email" },
   terms: { title: "Terms and Conditions", description: "Terms and Conditions for using ChaiAuth services." },
   privacy: { title: "Privacy Policy", description: "Privacy Policy and data practices for ChaiAuth." },

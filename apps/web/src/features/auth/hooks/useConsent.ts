@@ -30,7 +30,9 @@ export function useConsent(searchParams: URLSearchParams) {
         scope: searchParams.get("scope"),
         state: searchParams.get("state"),
         code_challenge: searchParams.get("code_challenge"),
-        code_challenge_method: searchParams.get("code_challenge_method")
+        code_challenge_method: searchParams.get("code_challenge_method"),
+        // Echoed back in the ID token so the app can tie it to its own sign-in attempt
+        nonce: searchParams.get("nonce")
       };
 
       if (!params.client_id) {
@@ -128,7 +130,17 @@ export function useConsent(searchParams: URLSearchParams) {
         }
       });
     } else {
-      window.location.href = "/dashboard";
+      // OAuth 2.0 (RFC 6749 4.1.2.1): tell the app the user said no, instead of leaving it waiting.
+      // The redirect_uri was already validated against the app's registered URI by the server.
+      const ctx = initQuery.data?.authContext;
+      if (ctx?.redirect_uri) {
+        const redirect = new URL(ctx.redirect_uri);
+        redirect.searchParams.set("error", "access_denied");
+        if (ctx.state) redirect.searchParams.set("state", ctx.state);
+        window.location.href = redirect.toString();
+      } else {
+        window.location.href = "/dashboard";
+      }
     }
   };
 

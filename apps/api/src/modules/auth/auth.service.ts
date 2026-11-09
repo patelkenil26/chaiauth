@@ -95,6 +95,53 @@ export const authService = {
     return { status: "authenticated", user: activeUser };
   },
 
+  /** Always succeeds from the caller's point of view (no user enumeration). */
+  async sendMagicLink(email: string): Promise<void> {
+    const user = await userRepository.findByEmail(email);
+    if (!user) return;
+
+    const { rawToken, hashedToken } = generateToken();
+
+    // Only the newest link works: requesting another one invalidates the previous
+    const previous = await redis.get(REDIS_KEYS.magicLinkOf(user.id));
+    const tx = redis.multi();
+    if (previous) tx.del(REDIS_KEYS.magicLink(previous));
+    tx.set(REDIS_KEYS.magicLink(hashedToken), user.id, "EX", TTL.magicLinkSec);
+    tx.set(REDIS_KEYS.magicLinkOf(user.id), hashedToken, "EX", TTL.magicLinkSec);
+    await tx.exec();
+
+    void runSafely("Magic link email", emailService.sendMagicLinkEmail(user.email, rawToken));
+  },
+
+  /** Single-use: the link is burned on the first attempt, whether or not the rest succeeds. */
+  async loginWithMagicLink(token: string): Promise<LoginOutcome> {
+    const invalid = ApiError.unauthorized("This sign-in link is invalid or has expired. Please request a new one.");
+
+    const userId = await redis.getdel(REDIS_KEYS.magicLink(hashToken(token)));
+    if (!userId) throw invalid;
+
+    const user = await userRepository.findById(userId);
+    if (!user) throw invalid;
+    await redis.del(REDIS_KEYS.magicLinkOf(userId));
+
+    // Opening the link proves control of the inbox, like an emailed OTP does
+    const verified = user.isVerified
+      ? user
+      : ((await userRepository.update(user.id, { isVerified: true })) ?? { ...user, isVerified: true });
+
+    // Identity is proven, so a soft-deleted account may be restored (same rule as OTP login)
+    const activeUser = await restoreIfSoftDeleted(verified);
+
+    if (activeUser.mfaEnabled) {
+      return {
+        status: "mfa_required",
+        mfaToken: generateMfaToken({ id: activeUser.id }),
+        email: activeUser.email,
+      };
+    }
+    return { status: "authenticated", user: activeUser };
+  },
+
   /** Validates and burns a one-time code. Codes are stored hashed and compared in constant time. */
   async consumeOtp(userId: string, storedHash: string | null, expires: Date | null, otp: string) {
     if (!storedHash || !expires) {

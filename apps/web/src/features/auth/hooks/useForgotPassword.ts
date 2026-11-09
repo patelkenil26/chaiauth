@@ -16,7 +16,7 @@ export function useForgotPassword() {
 
   const mutation = useMutation({
     mutationFn: async (data: ForgotPasswordFormData) => {
-      return await authApi.forgotPassword({ email: data.email });
+      return await authApi.forgotPassword({ email: data.email, captchaToken: data.captchaToken });
     },
     onSuccess: (_, variables) => {
       setSentEmail(variables.email);

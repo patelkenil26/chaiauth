@@ -12,6 +12,8 @@ interface LimiterOptions {
   /** Count only failed (status >= 400) requests. */
   skipSuccessfulRequests?: boolean;
   handler?: Options["handler"];
+  /** Bucket key; defaults to the client IP. */
+  keyGenerator?: Options["keyGenerator"];
 }
 
 /** Factory so every limiter shares the same Redis store + header conventions. */
@@ -22,6 +24,7 @@ const createRateLimiter = ({
   message,
   skipSuccessfulRequests = false,
   handler,
+  keyGenerator,
 }: LimiterOptions) =>
   rateLimit({
     windowMs,
@@ -36,6 +39,7 @@ const createRateLimiter = ({
     }),
     message: { success: false, message, code: "TOO_MANY_REQUESTS" },
     ...(handler && { handler }),
+    ...(keyGenerator && { keyGenerator }),
   });
 
 const MINUTE = 60 * 1000;
@@ -75,6 +79,15 @@ export const emailActionLimiter = createRateLimiter({
   windowMs: 15 * MINUTE,
   max: 5,
   message: "Too many requests. Please try again after 15 minutes.",
+});
+
+/** Server API: 120 requests / min per API key (not per IP: servers share addresses). */
+export const apiKeyLimiter = createRateLimiter({
+  prefix: "rl_api_key:",
+  windowMs: MINUTE,
+  max: 120,
+  message: "API rate limit exceeded, please slow down",
+  keyGenerator: (req) => req.apiClient?.keyId ?? "unknown",
 });
 
 const OAUTH_LIMIT_MESSAGE = "Too many authentication attempts, please try again after 1 minute";

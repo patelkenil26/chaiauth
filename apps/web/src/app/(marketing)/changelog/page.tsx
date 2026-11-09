@@ -9,9 +9,14 @@ export const metadata = constructMetadata({
 
 const entries = [
   {
-    version: "Upcoming",
-    tag: "Roadmap",
-    items: ["Application API keys", "@chaiauth/react SDK with <SignIn /> and <UserButton />"],
+    version: "Passwordless sign-in & developer tools",
+    tag: "New",
+    items: [
+      "Magic links: sign in with a one-time email link (single use, 15 minutes, MFA still enforced)",
+      "Application API keys and a server API to read the users who approved your app",
+      "@chaiauth/react SDK with <SignIn />, <UserButton /> and hooks, built on PKCE",
+      "Apps are now told when a user cancels the consent screen (access_denied)",
+    ],
   },
   {
     version: "Social login hardening",

@@ -1,8 +1,7 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import Link from "next/link";
-import { Lock, ShieldCheck, KeyRound, Fingerprint, Check, Loader2 } from "lucide-react";
+import { Lock, ShieldCheck, KeyRound, Fingerprint } from "lucide-react";
 
 import { Logo } from "@/shared/components/Logo";
 

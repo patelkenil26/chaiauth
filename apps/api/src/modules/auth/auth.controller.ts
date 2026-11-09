@@ -3,9 +3,10 @@ import { ApiResponse } from "../../common/utils/api-response";
 import type { BodyRequest } from "../../common/utils/request";
 import { REFRESH_COOKIE_NAME } from "./auth.constants";
 import { clearRefreshTokenCookie } from "./auth.cookies";
-import { authService } from "./auth.service";
+import { authService, type LoginOutcome } from "./auth.service";
 import { startAuthenticatedSession } from "./auth.session";
 import type { LoginInput } from "./dto/login.dto";
+import type { MagicLinkRequestInput, MagicLinkVerifyInput } from "./dto/magic-link.dto";
 import type { SendOtpInput } from "./dto/otp.dto";
 import type { ForgotPasswordInput, ResetPasswordInput, TokenParams } from "./dto/password.dto";
 import type { RegisterInput } from "./dto/register.dto";
@@ -15,9 +16,8 @@ export const register = async (req: BodyRequest<RegisterInput>, res: Response) =
   ApiResponse.created(res, "Registration successful. Please verify your email.", user);
 };
 
-export const login = async (req: BodyRequest<LoginInput>, res: Response) => {
-  const outcome = await authService.login(req.body);
-
+/** Shared by every first-factor login (password / OTP / magic link): MFA step-up or a new session. */
+const respondToLogin = async (req: Request, res: Response, outcome: LoginOutcome) => {
   if (outcome.status === "mfa_required") {
     // Only the email is revealed until the second factor is verified
     return ApiResponse.ok(res, "MFA required", {
@@ -30,6 +30,17 @@ export const login = async (req: BodyRequest<LoginInput>, res: Response) => {
   const data = await startAuthenticatedSession(req, res, outcome.user);
   ApiResponse.ok(res, "Login successful", data);
 };
+
+export const login = async (req: BodyRequest<LoginInput>, res: Response) =>
+  respondToLogin(req, res, await authService.login(req.body));
+
+export const requestMagicLink = async (req: BodyRequest<MagicLinkRequestInput>, res: Response) => {
+  await authService.sendMagicLink(req.body.email);
+  ApiResponse.ok(res, "If an account exists for that email, a sign-in link has been sent.");
+};
+
+export const verifyMagicLink = async (req: BodyRequest<MagicLinkVerifyInput>, res: Response) =>
+  respondToLogin(req, res, await authService.loginWithMagicLink(req.body.token));
 
 export const sendOtp = async (req: BodyRequest<SendOtpInput>, res: Response) => {
   await authService.sendOtp(req.body);
