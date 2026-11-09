@@ -3,6 +3,7 @@
 import React from "react";
 import { Fingerprint, Loader2 } from "lucide-react";
 import { usePasskeys } from "../hooks/usePasskeys";
+import { IconTile } from "@/shared/components/IconTile";
 
 export function PasskeyRegistrationCard() {
   const { isLoading, registerPasskey } = usePasskeys();
@@ -10,9 +11,9 @@ export function PasskeyRegistrationCard() {
   return (
     <section className="ca-glass rounded-md p-6">
       <div className="flex items-center gap-4 mb-6">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-accent text-primary">
+        <IconTile>
           <Fingerprint className="h-5 w-5" />
-        </span>
+        </IconTile>
         <div>
           <h2 className="font-display text-lg font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>
             Passkeys & WebAuthn

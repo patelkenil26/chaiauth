@@ -2,6 +2,7 @@
 
 import { Download, Loader2, X, Lock } from "lucide-react";
 import { useExportData } from "../hooks/useExportData";
+import { IconTile } from "@/shared/components/IconTile";
 
 export function ExportDataCard() {
   const { 
@@ -18,9 +19,9 @@ export function ExportDataCard() {
     <>
       <div className="ca-glass overflow-hidden rounded-xl">
         <div className="border-b border-border/50 px-5 py-4 flex items-center gap-4">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+          <IconTile>
             <Download className="h-5 w-5" />
-          </div>
+          </IconTile>
           <div>
             <h2 className="text-base font-semibold text-foreground">Export Data</h2>
             <p className="mt-1 text-sm text-muted-foreground">

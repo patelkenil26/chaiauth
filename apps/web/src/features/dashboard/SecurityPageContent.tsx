@@ -30,15 +30,14 @@ export function SecurityPageContent() {
   return (
     <div>
       <PageHeader 
-        eyebrow="Security & Authentication" 
-        title="Manage your security" 
+        eyebrow="Security & Authentication"
+        title="Manage your security"
+        description="Passwords, two-factor codes and passkeys that keep your account yours."
       />
-      <div className="grid gap-5 xl:grid-cols-[1fr] ca-fade-up max-w-4xl">
-        <div className="space-y-5">
-          <UpdatePasswordForm />
-          <MfaSettingsCard user={user} />
-          <PasskeyRegistrationCard />
-        </div>
+      <div className="ca-stagger space-y-5">
+        <UpdatePasswordForm />
+        <MfaSettingsCard user={user} />
+        <PasskeyRegistrationCard />
       </div>
     </div>
   );

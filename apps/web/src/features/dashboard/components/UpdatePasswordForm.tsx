@@ -5,6 +5,7 @@ import { KeyRound, Eye, EyeOff, Loader2 } from "lucide-react";
 import { PasswordRules } from "@/shared/components/PasswordRules";
 
 import { useUpdatePassword } from "../hooks/useUpdatePassword";
+import { IconTile } from "@/shared/components/IconTile";
 
 export function UpdatePasswordForm() {
   const {
@@ -19,9 +20,9 @@ export function UpdatePasswordForm() {
   return (
     <form onSubmit={onSubmit} noValidate className="ca-glass space-y-4 rounded-md p-6">
       <div className="flex items-center gap-4 mb-6">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-accent text-primary">
+        <IconTile>
           <KeyRound className="h-5 w-5" />
-        </span>
+        </IconTile>
         <div>
           <h2 className="font-display text-lg font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>Password</h2>
           <p className="text-sm text-muted-foreground mt-1">Use at least six characters.</p>

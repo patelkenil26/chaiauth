@@ -2,6 +2,7 @@
 
 import { UserCircle, Loader2 } from "lucide-react";
 import { useProfileSettings } from "../hooks/useProfileSettings";
+import { IconTile } from "@/shared/components/IconTile";
 
 export function ProfileSettingsCard({ user }: { user: any }) {
   const { name, setName, email, setEmail, isDirty, isLoading, handleSubmit } = useProfileSettings(user);
@@ -9,9 +10,9 @@ export function ProfileSettingsCard({ user }: { user: any }) {
   return (
     <section className="ca-glass rounded-md p-6">
       <div className="flex items-center gap-4 mb-6">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-accent text-primary">
+        <IconTile>
           <UserCircle className="h-5 w-5" />
-        </span>
+        </IconTile>
         <div>
           <h2 className="font-display text-lg font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>
             Profile Details

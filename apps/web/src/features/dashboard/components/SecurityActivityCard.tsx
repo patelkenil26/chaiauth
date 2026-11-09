@@ -4,11 +4,12 @@ import React from "react";
 import { ShieldCheck, UserCheck, KeyRound } from "lucide-react";
 import { useUserProfile } from "../hooks/useUserProfile";
 import { format } from "date-fns";
+import { IconTile } from "@/shared/components/IconTile";
 
 export function SecurityActivityCard() {
   const { data: user } = useUserProfile();
 
-  const mfaStatus = user?.isMfaEnabled 
+  const mfaStatus = user?.mfaEnabled 
     ? "Protected by Two-Factor Authentication" 
     : "No two-factor protection enabled";
 
@@ -19,9 +20,9 @@ export function SecurityActivityCard() {
   return (
     <section className="ca-glass rounded-md p-6">
       <div className="flex items-center gap-4">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-accent text-primary">
+        <IconTile>
           <ShieldCheck className="h-5 w-5" />
-        </span>
+        </IconTile>
         <div>
           <h2 className="font-display text-lg font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>
             Security snapshot

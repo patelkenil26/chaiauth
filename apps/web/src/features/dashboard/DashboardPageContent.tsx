@@ -5,6 +5,8 @@ import { VerifyEmailAlert } from "./components/VerifyEmailAlert";
 import { ProfileDetailsCard } from "./components/ProfileDetailsCard";
 import { ProfileSettingsCard } from "./components/ProfileSettingsCard";
 import { ExportDataCard } from "./components/ExportDataCard";
+import { AccountHealthCard } from "./components/AccountHealthCard";
+import { QuickActions } from "./components/QuickActions";
 import { DeleteAccountCard } from "./components/DeleteAccountCard";
 import { Loader2 } from "lucide-react";
 
@@ -36,19 +38,20 @@ export function DashboardPageContent() {
 
   return (
     <div>
-      <PageHeader 
-        eyebrow="Account overview" 
-        title={`Welcome back, ${firstName}`} 
+      <PageHeader
+        eyebrow="Account overview"
+        title={`Welcome back, ${firstName}`}
+        description="Your profile, security health and shortcuts in one place."
       />
-      <div className="grid gap-5 xl:grid-cols-[1fr] ca-fade-up max-w-4xl">
-        <div className="space-y-5">
-          {!user.isVerified && !user.pendingEmail && <VerifyEmailAlert email={user.email} />}
-          {user.pendingEmail && <VerifyEmailAlert email={user.pendingEmail} isPendingChange={true} />}
-          <ProfileDetailsCard user={user} />
-          <ProfileSettingsCard user={user} />
-          <ExportDataCard />
-          <DeleteAccountCard />
-        </div>
+      <div className="ca-stagger space-y-5">
+        {!user.isVerified && !user.pendingEmail && <VerifyEmailAlert email={user.email} />}
+        {user.pendingEmail && <VerifyEmailAlert email={user.pendingEmail} isPendingChange={true} />}
+        <ProfileDetailsCard user={user} />
+        <QuickActions />
+        <AccountHealthCard user={user} />
+        <ProfileSettingsCard user={user} />
+        <ExportDataCard />
+        <DeleteAccountCard />
       </div>
     </div>
   );

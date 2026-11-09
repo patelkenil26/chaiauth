@@ -9,14 +9,13 @@ export function SessionsPageContent() {
   return (
     <div>
       <PageHeader 
-        eyebrow="Sessions & Devices" 
-        title="Active sessions & activity" 
+        eyebrow="Sessions & Devices"
+        title="Active sessions & activity"
+        description="Every device signed in to your account. Revoke anything you don't recognise."
       />
-      <div className="grid gap-5 xl:grid-cols-[1fr] ca-fade-up max-w-4xl">
-        <div className="space-y-5">
-          <SessionsCard />
-          <SecurityActivityCard />
-        </div>
+      <div className="ca-stagger space-y-5">
+        <SessionsCard />
+        <SecurityActivityCard />
       </div>
     </div>
   );
