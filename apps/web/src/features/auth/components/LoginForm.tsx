@@ -43,7 +43,7 @@ export function LoginForm() {
           <button
             type="submit"
             disabled={(mfaCode.length !== 6 && mfaCode.length !== 8) || isMfaLoading}
-            className="ca-button-primary w-full"
+            className="ca-btn ca-btn-primary w-full"
           >
             {isMfaLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Verify Code"}
           </button>

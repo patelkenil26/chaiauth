@@ -88,18 +88,18 @@ function AnimatedSecurityChecks() {
 function TrustPanel() {
   return (
     <div className="relative flex h-full min-h-screen flex-col justify-center gap-12 p-12 xl:p-16">
-      <div className="absolute -right-32 -top-32 h-[520px] w-[520px] rounded-full ca-pulse" style={{ background: "radial-gradient(circle, color-mix(in oklab, var(--chai-mid) 35%, transparent), transparent 65%)" }} />
+      <div className="ca-aurora"><span /><span /><span /></div>
       <div className="relative">
         <span className="ca-mono text-[0.7rem] uppercase tracking-[0.2em] text-primary">Identity infrastructure</span>
         <h2 className="mt-4 max-w-md text-[2.6rem] font-semibold leading-[1.05] tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>
-          One login. <span className="ca-text-chai">Every app</span> you trust.
+          One login. <span className="ca-text-chai-anim">Every app</span> you trust.
         </h2>
         <p className="mt-4 max-w-sm text-muted-foreground">
           OpenID Connect sign-in for your products, with secure sessions and granular consent.
         </p>
       </div>
 
-      <div className="relative ca-glass mx-auto w-full max-w-md rounded-2xl p-5">
+      <div className="relative ca-glass ca-glow-border ca-float-slow mx-auto w-full max-w-md rounded-2xl p-5">
         <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-primary">
@@ -111,7 +111,7 @@ function TrustPanel() {
             </div>
           </div>
           <span className="flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[0.7rem] text-good">
-            <span className="h-1.5 w-1.5 rounded-full bg-good" /> Live
+            <span className="ca-dot-live" /> Live
           </span>
         </div>
         <ul className="space-y-3 pt-4 text-sm">
@@ -149,15 +149,18 @@ export function AuthLayout({
 }) {
   return (
     <div className="ca-root dark relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      <div className="ca-aurora lg:hidden"><span /><span /><span /></div>
       <div className="ca-grid pointer-events-none absolute inset-0" />
-      <main className="relative flex min-h-screen flex-col px-6 py-8 sm:px-10">
+      <main className="relative flex min-h-screen flex-col px-5 py-8 sm:px-10">
         <Logo />
         <div className="flex flex-1 items-center justify-center py-10">
-          <div className="w-full max-w-[400px] ca-fade-up">
-            {title && <h1 className="text-[1.9rem] font-semibold leading-tight tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>{title}</h1>}
-            {subtitle && <p className="mt-2 text-[0.95rem] text-muted-foreground">{subtitle}</p>}
-            <div className="mt-8">{children}</div>
-            {footer && <div className="mt-8 text-center text-sm text-muted-foreground">{footer}</div>}
+          <div className="ca-glass ca-fade-up w-full max-w-[440px] rounded-3xl p-7 sm:p-9">
+            <div className="ca-stagger">
+              {title && <h1 className="text-[1.9rem] font-semibold leading-tight tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>{title}</h1>}
+              {subtitle && <p className="mt-2 text-[0.95rem] text-muted-foreground">{subtitle}</p>}
+              <div className="mt-8">{children}</div>
+              {footer && <div className="mt-8 text-center text-sm text-muted-foreground">{footer}</div>}
+            </div>
           </div>
         </div>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">

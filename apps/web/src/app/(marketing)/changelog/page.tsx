@@ -1,5 +1,6 @@
 import { constructMetadata } from "@/config/site";
 import { PageHero, Section } from "@/features/marketing/components/blocks";
+import { Reveal } from "@/features/marketing/components/Reveal";
 
 export const metadata = constructMetadata({
   title: "Changelog",
@@ -32,19 +33,29 @@ const entries = [
 export default function ChangelogPage() {
   return (
     <>
-      <PageHero eyebrow="Changelog" title={<>What&apos;s <span className="ca-text-chai">new</span></>} subtitle="Product updates and what is coming next." />
+      <PageHero
+        eyebrow="Changelog"
+        title={<>What&apos;s <span className="ca-text-chai-anim">new</span></>}
+        subtitle="Product updates and what is coming next."
+      />
       <Section>
-        <ol className="mx-auto max-w-3xl space-y-5">
-          {entries.map((e) => (
-            <li key={e.version} className="ca-glass rounded-2xl p-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-lg font-semibold text-foreground">{e.version}</h2>
-                <span className="ca-soon">{e.tag}</span>
+        <ol className="relative mx-auto max-w-3xl space-y-6 pl-8 sm:pl-10">
+          <span className="absolute bottom-2 left-[0.55rem] top-2 w-px bg-gradient-to-b from-[var(--chai-mid)] via-border to-transparent sm:left-[0.8rem]" />
+          {entries.map((e, i) => (
+            <Reveal as="li" key={e.version} delay={i * 80} className="relative">
+              <span className="absolute -left-8 top-7 grid h-4 w-4 place-items-center rounded-full border border-primary/60 bg-background sm:-left-10">
+                <span className={`h-1.5 w-1.5 rounded-full bg-primary ${i === 0 ? "ca-pulse" : ""}`} />
+              </span>
+              <div className="ca-glass rounded-2xl p-6 transition-colors hover:border-primary/40">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-lg font-semibold text-foreground">{e.version}</h2>
+                  <span className="ca-soon">{e.tag}</span>
+                </div>
+                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-text-soft marker:text-primary">
+                  {e.items.map((item) => <li key={item}>{item}</li>)}
+                </ul>
               </div>
-              <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-text-soft">
-                {e.items.map((i) => <li key={i}>{i}</li>)}
-              </ul>
-            </li>
+            </Reveal>
           ))}
         </ol>
       </Section>
