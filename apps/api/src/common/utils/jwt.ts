@@ -1,6 +1,7 @@
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { config } from "../config/env.config";
 import { getSigningKeys } from "./cert";
+import { getKeyId } from "./jwks";
 import type { UserRole } from "../constants/roles";
 
 // ── Payload types ───────────────────────────────────────────
@@ -55,11 +56,12 @@ export const verifyMfaToken = (token: string) =>
   }) as MfaTokenPayload;
 
 // ── OIDC tokens (RS256) ─────────────────────────────────────
-export const generateOidcIdToken = (userId: string, clientId: string) =>
-  jwt.sign({ sub: userId, aud: clientId }, getSigningKeys().privateKey, {
+export const generateOidcIdToken = (userId: string, clientId: string, nonce?: string) =>
+  jwt.sign({ sub: userId, aud: clientId, ...(nonce && { nonce }) }, getSigningKeys().privateKey, {
     algorithm: "RS256",
     expiresIn: OIDC_TOKEN_TTL,
     issuer: config.jwt.issuer,
+    keyid: getKeyId(),
   });
 
 export const generateOidcAccessToken = (userId: string, clientId: string, scope: string) =>
@@ -67,6 +69,7 @@ export const generateOidcAccessToken = (userId: string, clientId: string, scope:
     algorithm: "RS256",
     expiresIn: OIDC_TOKEN_TTL,
     issuer: config.jwt.issuer,
+    keyid: getKeyId(),
   });
 
 export interface OidcAccessTokenPayload {

@@ -7,6 +7,7 @@ import type { SelectUser } from "@repo/database/schema";
 import { generateAccessToken, generateMfaToken, verifyRefreshToken } from "../../common/utils/jwt";
 import { burnPasswordCheck, comparePassword, hashPassword } from "../../common/utils/password";
 import { runSafely } from "../../common/utils/safe-async";
+import { restoreIfSoftDeleted } from "./account-recovery";
 import { REDIS_KEYS, TTL } from "./auth.constants";
 import { toPublicUser, type PublicUser } from "./auth.mapper";
 import type { LoginInput } from "./dto/login.dto";
@@ -80,20 +81,18 @@ export const authService = {
       if (!user.isVerified) throw ApiError.forbidden("Please verify your email before logging in");
     }
 
-    // Credentials are valid from here on. Only now may a soft-deleted account be restored.
-    if (user.deletedAt) {
-      if (Date.now() - user.deletedAt.getTime() > TTL.accountRecoveryMs) {
-        throw ApiError.forbidden("Account has been permanently deleted.");
-      }
-      await userRepository.update(user.id, { deletedAt: null });
-      user.deletedAt = null;
+    // Credentials are valid from here on, so a soft-deleted account may now be restored.
+    const activeUser = await restoreIfSoftDeleted(user);
+
+    if (activeUser.mfaEnabled) {
+      return {
+        status: "mfa_required",
+        mfaToken: generateMfaToken({ id: activeUser.id }),
+        email: activeUser.email,
+      };
     }
 
-    if (user.mfaEnabled) {
-      return { status: "mfa_required", mfaToken: generateMfaToken({ id: user.id }), email: user.email };
-    }
-
-    return { status: "authenticated", user };
+    return { status: "authenticated", user: activeUser };
   },
 
   /** Validates and burns a one-time code. Codes are stored hashed and compared in constant time. */

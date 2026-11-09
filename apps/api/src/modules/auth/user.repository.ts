@@ -1,4 +1,4 @@
-import { db, eq, and, or, gt, type SQL } from "@repo/database";
+import { db, eq, and, or, gt, sql, type SQL } from "@repo/database";
 import { usersTable, type InsertUser, type SelectUser } from "@repo/database/schema";
 
 /**
@@ -70,6 +70,19 @@ export const userRepository = {
         ),
       );
     return user;
+  },
+
+  /**
+   * Atomically removes one backup-code hash. Returns false if the code was not present,
+   * so two concurrent requests can never both spend the same code.
+   */
+  async consumeBackupCode(id: string, codeHash: string): Promise<boolean> {
+    const rows = await db
+      .update(usersTable)
+      .set({ backupCodes: sql`array_remove(${usersTable.backupCodes}, ${codeHash})` })
+      .where(and(eq(usersTable.id, id), sql`${codeHash} = ANY(${usersTable.backupCodes})`))
+      .returning({ id: usersTable.id });
+    return rows.length > 0;
   },
 
   async create(values: InsertUser): Promise<SelectUser> {

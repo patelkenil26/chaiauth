@@ -17,6 +17,11 @@ const envSchema = z.object({
   /** OIDC issuer (`iss` claim). Defaults to BASE_URL. */
   ISSUER_URL: z.url().optional(),
 
+  /** 32-byte key as 64 hex chars: encrypts TOTP secrets, keys backup-code hashes. */
+  DATA_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[0-9a-fA-F]{64}$/, "DATA_ENCRYPTION_KEY must be 64 hex characters (32 bytes)"),
+
   // Infrastructure
   REDIS_HOST: z.string().default("127.0.0.1"),
   REDIS_PORT: z.coerce.number().int().positive().default(6379),
@@ -68,6 +73,13 @@ export const config = {
       .filter(Boolean),
   },
   redis: { host: env.REDIS_HOST, port: env.REDIS_PORT },
+  security: { encryptionKey: Buffer.from(env.DATA_ENCRYPTION_KEY, "hex") },
+  webauthn: {
+    rpName: "ChaiAuth",
+    // Relying-party id is the frontend hostname (e.g. localhost, auth.example.com)
+    rpId: new URL(env.FRONTEND_URL).hostname,
+    origin: new URL(env.FRONTEND_URL).origin,
+  },
   jwt: {
     issuer: env.ISSUER_URL ?? env.BASE_URL,
     accessSecret: env.JWT_ACCESS_SECRET,

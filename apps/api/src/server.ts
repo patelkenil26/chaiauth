@@ -14,6 +14,7 @@ import { config } from "./common/config/env.config";
 import { globalLimiter } from "./common/middleware/rate-limiter.middleware";
 import { errorHandler, notFoundHandler } from "./common/middleware/error.middleware";
 import authRoutes from "./modules/auth/auth.routes";
+import oidcRoutes from "./modules/oidc/oidc.routes";
 
 export const app = express();
 
@@ -28,6 +29,15 @@ const openApiDocument = generateOpenApiDocument(serverRouter, {
 
 // ── Security & parsing ──────────────────────────────────────
 app.use(helmet());
+
+// Third-party apps (SPAs using PKCE) call these from their own origins, without cookies.
+// Must come BEFORE the credentialed, allow-listed CORS below: it also answers their preflights.
+const OIDC_PUBLIC_PATHS = ["/.well-known", "/o/token", "/o/userinfo", "/o/revoke"];
+const oidcPublicCors = cors({ origin: "*", credentials: false });
+app.use((req, res, next) =>
+  OIDC_PUBLIC_PATHS.some((p) => req.path.startsWith(p)) ? oidcPublicCors(req, res, next) : next(),
+);
+
 app.use(
   cors({
     // Requests without an Origin (curl, server-to-server) are allowed;
@@ -61,7 +71,7 @@ app.use("/docs", apiReference({ url: "/openapi.json" }));
 
 // ── Feature modules (REST). Must come BEFORE the template tRPC/OpenAPI router on /api.
 app.use("/api/auth", authRoutes);
-// app.use("/", oidcRoutes);  (OIDC module: later step)
+app.use("/", oidcRoutes);
 
 // ── tRPC / OpenAPI ──────────────────────────────────────────
 app.use("/api", createOpenApiExpressMiddleware({ router: serverRouter, createContext }));

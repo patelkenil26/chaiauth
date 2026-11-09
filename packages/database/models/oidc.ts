@@ -5,6 +5,7 @@ import {
   timestamp,
   jsonb,
   index,
+  unique,
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./user";
 
@@ -17,6 +18,7 @@ export const clientsTable = pgTable(
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),
     clientId: varchar("client_id", { length: 255 }).notNull().unique(),
+    // SHA-256 hash of the secret. The raw secret is shown to the developer once and never stored.
     clientSecret: varchar("client_secret", { length: 255 }).notNull(),
     displayName: varchar("display_name", { length: 255 }).notNull(),
     applicationUrl: varchar("application_url", { length: 255 }),
@@ -42,7 +44,7 @@ export const consentsTable = pgTable(
     scopes: varchar("scopes", { length: 255 }).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (t) => [index("consents_user_client_idx").on(t.userId, t.clientId)],
+  (t) => [unique("consents_user_client_unique").on(t.userId, t.clientId)],
 );
 
 export type SelectClient = typeof clientsTable.$inferSelect;

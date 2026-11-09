@@ -49,5 +49,6 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     message: apiError.message,
     code: apiError.code,
     ...(apiError.details !== undefined && { details: apiError.details }),
+    ...apiError.extra,
   });
 };

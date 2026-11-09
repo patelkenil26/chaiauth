@@ -23,6 +23,8 @@ export class ApiError extends Error {
     message: string,
     public readonly code: ErrorCode = ERROR_CODES.INTERNAL,
     public readonly details?: unknown,
+    /** Extra top-level JSON fields (e.g. OAuth2 `error` / `error_description`). */
+    public readonly extra?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiError";

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validate } from "../../common/middleware/validate.middleware";
 import { verifyCaptcha } from "../../common/middleware/captcha.middleware";
-import { authLimiter, emailActionLimiter, strictAuthLimiter } from "../../common/middleware/rate-limiter.middleware";
+import { authLimiter, emailActionLimiter, oauthLimiter, strictAuthLimiter } from "../../common/middleware/rate-limiter.middleware";
 import * as account from "./account.controller";
 import * as controller from "./auth.controller";
 import { authenticate } from "./auth.middleware";
@@ -15,13 +15,19 @@ import {
   updatePasswordDto,
 } from "./dto/password.dto";
 import { registerDto } from "./dto/register.dto";
+import * as mfaController from "./mfa/mfa.controller";
+import { mfaLoginDto } from "./mfa/mfa.dto";
+import mfaRoutes from "./mfa/mfa.routes";
+import providersRoutes from "./providers/providers.routes";
 import sessionsRoutes from "./sessions/sessions.routes";
+import webauthnRoutes from "./webauthn/webauthn.routes";
 
 const router = Router();
 
 // ── Credentials ─────────────────────────────────────────────
 router.post("/register", authLimiter, verifyCaptcha, validate({ body: registerDto }), controller.register);
 router.post("/login", strictAuthLimiter, verifyCaptcha, validate({ body: loginDto }), controller.login);
+router.post("/login/mfa", strictAuthLimiter, validate({ body: mfaLoginDto }), mfaController.loginWithMfa);
 router.post("/send-otp", emailActionLimiter, validate({ body: sendOtpDto }), controller.sendOtp);
 router.post("/refresh-token", authLimiter, controller.refreshToken);
 router.post("/logout", authenticate, controller.logout);
@@ -64,6 +70,8 @@ router.get("/export-data/download/:token", validate({ params: tokenParamDto }), 
 
 // ── Sub-modules ─────────────────────────────────────────────
 router.use("/sessions", sessionsRoutes);
-// Mounted in the next steps: /mfa, /providers, /webauthn, /login/mfa
+router.use("/mfa", authLimiter, mfaRoutes);
+router.use("/providers", oauthLimiter, providersRoutes);
+router.use("/webauthn", webauthnRoutes);
 
 export default router;
