@@ -2,8 +2,10 @@ import { z } from "zod";
 
 const envSchema = z.object({
   PORT: z.string().optional(),
-  NODE_ENV: z.enum(["development", "prod"]).default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   BASE_URL: z.string().default("http://localhost:8000"),
+  // Comma-separated list of allowed browser origins (CORS)
+  ALLOWED_ORIGINS: z.string().default("http://localhost:3000"),
 });
 
 function createEnv(env: NodeJS.ProcessEnv) {

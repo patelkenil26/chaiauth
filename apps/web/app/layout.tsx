@@ -13,8 +13,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Streamyst",
-  description: "Media Forwarding",
+  title: "ChaiAuth",
+  description: "Drop-in authentication and identity platform",
 };
 
 export default function RootLayout({
