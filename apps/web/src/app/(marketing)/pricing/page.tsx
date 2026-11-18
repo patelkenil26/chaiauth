@@ -19,7 +19,7 @@ const plans = [
     cta: "Get started",
     href: "/register",
     highlight: false,
-    items: ["Up to 3 applications", "Email, magic link, Google & GitHub login", "TOTP MFA & passkeys", "Community support"],
+    items: ["Up to 3 applications", "All login methods", "MFA & passkeys", "Community support"],
   },
   {
     name: "Pro",
@@ -28,7 +28,7 @@ const plans = [
     cta: "Start Pro",
     href: "/register",
     highlight: true,
-    items: ["Unlimited applications", "Everything in Starter", "Extended security activity log", "Email support"],
+    items: ["Unlimited applications", "Everything in Starter", "Extended activity log", "Email support"],
   },
   {
     name: "Enterprise",
@@ -46,14 +46,14 @@ export default function PricingPage() {
     <>
       <PageHero
         eyebrow="Pricing"
-        title={<>Simple pricing, <span className="ca-text-chai-anim">no surprises</span></>}
-        subtitle="Start free. Upgrade when your apps and team grow."
+        title={<>Simple pricing, <span className="ca-text-chai">no surprises</span></>}
+        subtitle="Start free. Upgrade when you grow."
       />
       <Section>
         <div className="grid items-stretch gap-5 md:grid-cols-3">
           {plans.map((p, i) => (
-            <Reveal key={p.name} delay={i * 110} className={p.highlight ? "md:-mt-4 md:mb-4" : ""}>
-              <SpotlightCard className={`flex h-full flex-col rounded-3xl p-8 ${p.highlight ? "ca-glow-border" : ""}`}>
+            <Reveal key={p.name} delay={i * 80}>
+              <SpotlightCard className={`flex h-full flex-col rounded-2xl p-7 ${p.highlight ? "ca-glow-border" : ""}`}>
                 {p.highlight && (
                   <span className="absolute right-6 top-6 rounded-full bg-primary/15 px-3 py-1 text-[0.7rem] font-semibold text-[var(--chai-soft)] ring-1 ring-primary/30">
                     Most popular
@@ -61,7 +61,7 @@ export default function PricingPage() {
                 )}
                 <h3 className="text-lg font-semibold text-foreground">{p.name}</h3>
                 <div className="mt-5 flex items-baseline gap-2">
-                  <span className={`font-display text-5xl font-bold ${p.highlight ? "ca-text-chai" : "text-foreground"}`}>{p.price}</span>
+                  <span className={`font-display text-4xl font-bold ${p.highlight ? "ca-text-chai" : "text-foreground"}`}>{p.price}</span>
                   <span className="text-sm text-muted-foreground">{p.note}</span>
                 </div>
                 <div className="ca-line-h my-6" />

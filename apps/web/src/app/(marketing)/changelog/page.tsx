@@ -12,16 +12,15 @@ const entries = [
     version: "Passwordless sign-in & developer tools",
     tag: "New",
     items: [
-      "Magic links: sign in with a one-time email link (single use, 15 minutes, MFA still enforced)",
-      "Application API keys and a server API to read the users who approved your app",
-      "@chaiauth/react SDK with <SignIn />, <UserButton /> and hooks, built on PKCE",
-      "Apps are now told when a user cancels the consent screen (access_denied)",
+      "Magic links: one-time email sign-in, MFA still enforced",
+      "Application API keys and a server API",
+      "@chaiauth/react SDK with <SignIn /> and <UserButton />",
     ],
   },
   {
     version: "Social login hardening",
     tag: "Improved",
-    items: ["Tokens no longer appear in the URL after Google / GitHub login", "Clear error toast when social sign-in fails"],
+    items: ["Tokens no longer appear in the URL after social login", "Clear error toast when sign-in fails"],
   },
   {
     version: "OIDC provider & developer console",
@@ -40,8 +39,8 @@ export default function ChangelogPage() {
     <>
       <PageHero
         eyebrow="Changelog"
-        title={<>What&apos;s <span className="ca-text-chai-anim">new</span></>}
-        subtitle="Product updates and what is coming next."
+        title={<>What&apos;s <span className="ca-text-chai">new</span></>}
+        subtitle="Product updates and improvements."
       />
       <Section>
         <ol className="relative mx-auto max-w-3xl space-y-6 pl-8 sm:pl-10">

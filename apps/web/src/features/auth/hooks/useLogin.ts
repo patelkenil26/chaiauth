@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authApi } from "../api/auth.api";
+import { setLastMethod } from "../lastMethod";
 import { LoginFormData, loginSchema } from "../schemas/auth.schema";
 import { useState, useId, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -51,6 +52,7 @@ export function useLogin() {
       if (accessToken) {
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("user", JSON.stringify(user));
+        setLastMethod("password");
       }
       toast.success("Welcome back!", { description: "You have successfully signed in." });
       window.location.href = "/dashboard";
@@ -76,6 +78,7 @@ export function useLogin() {
       if (verifyRes.data.accessToken) {
         localStorage.setItem("accessToken", verifyRes.data.accessToken);
         localStorage.setItem("user", JSON.stringify(verifyRes.data.user));
+        setLastMethod("passkey");
         toast.success("Welcome back!", { description: "You have successfully signed in with your passkey." });
         window.location.href = "/dashboard";
       }

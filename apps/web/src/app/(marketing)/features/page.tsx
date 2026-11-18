@@ -13,7 +13,7 @@ export default function FeaturesPage() {
       <PageHero
         eyebrow="Features"
         title={<>One platform for <span className="ca-text-chai">every sign-in</span></>}
-        subtitle="From a first password to passwordless passkeys, ChaiAuth covers the whole identity lifecycle for your users and your apps."
+        subtitle="From a first password to passkeys, ChaiAuth covers the whole identity lifecycle."
       />
       <Section>
         <FeatureGrid items={features} />

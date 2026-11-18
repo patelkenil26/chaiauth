@@ -12,19 +12,18 @@ export default function SecurityPage() {
     <>
       <PageHero
         eyebrow="Security"
-        title={<>Security is the <span className="ca-text-chai">product</span>, not a feature</>}
-        subtitle="Defense in depth from the login form to the token endpoint, with the controls visible to you in your dashboard."
+        title={<>Security is the <span className="ca-text-chai">product</span></>}
+        subtitle="Defense in depth, from the login form to the token endpoint."
       />
       <Section>
         <FeatureGrid items={securityPillars} />
       </Section>
       <Section>
-        <div className="ca-glass mx-auto max-w-3xl rounded-2xl p-8 text-center">
-          <h2 className="text-2xl font-bold text-foreground">Found a vulnerability?</h2>
-          <p className="mt-3 text-sm leading-relaxed text-text-soft">
-            Please report it privately to{" "}
-            <a href="mailto:security@chaiauth.com" className="text-primary hover:underline">security@chaiauth.com</a>{" "}
-            and give us a chance to fix it before disclosure.
+        <div className="ca-glass mx-auto max-w-2xl rounded-2xl p-6 text-center">
+          <h2 className="text-xl font-bold text-foreground">Found a vulnerability?</h2>
+          <p className="mt-2 text-sm leading-relaxed text-text-soft">
+            Report it privately to{" "}
+            <a href="mailto:security@chaiauth.com" className="text-primary hover:underline">security@chaiauth.com</a>.
           </p>
         </div>
       </Section>

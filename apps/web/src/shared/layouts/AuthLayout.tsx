@@ -1,136 +1,72 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { Lock, ShieldCheck, KeyRound, Fingerprint } from "lucide-react";
+import Link from "next/link";
+import { Lock, ShieldCheck, KeyRound, Fingerprint, RefreshCw, MonitorSmartphone, UserPlus, Code2, ArrowLeft } from "lucide-react";
 
 import { Logo } from "@/shared/components/Logo";
 import { ThemeToggle } from "@/shared/components/ThemeToggle";
 
-function AnimatedSecurityChecks() {
-  const LOGS = [
-    { event: "Successful login", user: "kenil@chaiauth.com", loc: "Ahmedabad, IN", time: "Just now", icon: ShieldCheck, color: "text-good", bg: "bg-good/10", rowBg: "from-good/5 hover:from-good/10" },
-    { event: "Passkey added", user: "sarah@acme.corp", loc: "New York, US", time: "2m ago", icon: Fingerprint, color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-400/10", rowBg: "from-blue-400/5 hover:from-blue-400/10" },
-    { event: "Blocked attempt", user: "admin@chaiauth.com", loc: "Moscow, RU", time: "5m ago", icon: Lock, color: "text-destructive", bg: "bg-destructive/10", rowBg: "from-destructive/5 hover:from-destructive/10" },
-    { event: "Token rotated", user: "system-cron", loc: "AWS us-east-1", time: "8m ago", icon: KeyRound, color: "text-purple-500 dark:text-purple-400", bg: "bg-purple-400/10", rowBg: "from-purple-400/5 hover:from-purple-400/10" },
-    { event: "Session revoked", user: "unknown_device", loc: "Beijing, CN", time: "12m ago", icon: ShieldCheck, color: "text-orange-500 dark:text-orange-400", bg: "bg-orange-400/10", rowBg: "from-orange-400/5 hover:from-orange-400/10" },
-  ];
+type Variant = "login" | "signup";
 
+const panels: Record<Variant, {
+  eyebrow: string;
+  title: ReactNode;
+  text: string;
+  points: { icon: typeof KeyRound; title: string; text: string }[];
+}> = {
+  login: {
+    eyebrow: "Welcome back",
+    title: <>Pick up right <span className="ca-text-chai">where you left off</span>.</>,
+    text: "Your apps, sessions and security settings are one sign-in away.",
+    points: [
+      { icon: Fingerprint, title: "Sign in faster", text: "Use a passkey or an email link, no password needed." },
+      { icon: MonitorSmartphone, title: "Stay in control", text: "Review active sessions and revoke any device." },
+      { icon: RefreshCw, title: "Short-lived sessions", text: "Rotating tokens keep your account safe." },
+    ],
+  },
+  signup: {
+    eyebrow: "Get started free",
+    title: <>Add secure sign-in to <span className="ca-text-chai">your app</span> today.</>,
+    text: "Create an account, register an app and start accepting users in minutes.",
+    points: [
+      { icon: UserPlus, title: "1. Create your account", text: "Free to start, no credit card required." },
+      { icon: Code2, title: "2. Register an app", text: "Get a client ID and secret from the developer console." },
+      { icon: KeyRound, title: "3. Connect with OIDC", text: "Works with any OpenID Connect library, PKCE included." },
+    ],
+  },
+};
+
+function TrustPanel({ variant }: { variant: Variant }) {
+  const { eyebrow, title, text, points } = panels[variant];
   return (
-    <div className="relative pt-8 border-t border-border/40">
-      <style>{`
-        @keyframes scroll-y {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(calc(-50% - 0.5rem)); }
-        }
-        .animate-scroll-y {
-          animation: scroll-y 20s linear infinite;
-        }
-        .animate-scroll-y:hover {
-          animation-play-state: paused;
-        }
-        @keyframes scanline {
-          0% { top: 0%; opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
-        }
-        .animate-scanline {
-          animation: scanline 4s ease-in-out infinite;
-        }
-      `}</style>
-      
-      <div className="flex items-center justify-between mb-5">
-        <p className="ca-mono text-[0.65rem] uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-          Live Security Audit
-        </p>
-        <span className="flex items-center gap-1.5 rounded-full bg-good/10 px-2 py-0.5 text-[0.65rem] text-good border border-good/20">
-          <span className="h-1.5 w-1.5 rounded-full bg-good animate-pulse" /> Monitoring
-        </span>
-      </div>
-      
-      {/* Container for scrolling logs */}
-      <div className="relative h-[220px] overflow-hidden rounded-xl ca-sunken">
-        {/* Top and Bottom Fading Gradients */}
-        <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-[var(--surface-soft)] to-transparent z-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[var(--surface-soft)] to-transparent z-10 pointer-events-none" />
-        
-        {/* Scanning Line */}
-        <div className="animate-scanline absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent z-20 pointer-events-none" />
-
-        {/* Scrolling Content */}
-        <div className="animate-scroll-y flex flex-col gap-2.5 px-3 py-2">
-          {[...LOGS, ...LOGS].map((log, i) => (
-            <div 
-              key={i} 
-              className={`group relative flex items-center justify-between rounded-lg border border-border/60 bg-gradient-to-r ${log.rowBg} to-transparent p-3 pr-4 transition-all hover:border-border`}
-            >
-              <div className="flex items-center gap-3.5">
-                <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-md ${log.bg} ${log.color}`}>
-                  <log.icon className="h-4 w-4" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[0.75rem] font-semibold text-foreground">{log.event}</span>
-                  <span className="text-[0.65rem] text-muted-foreground mt-0.5">{log.user}</span>
-                </div>
-              </div>
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[0.7rem] font-medium text-text-soft">{log.time}</span>
-                <span className="text-[0.65rem] text-muted-foreground mt-0.5">{log.loc}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TrustPanel() {
-  return (
-    <div className="relative flex h-full min-h-screen flex-col justify-center gap-12 p-12 xl:p-16">
+    <div className="relative flex h-full min-h-screen flex-col justify-center gap-10 p-12 xl:p-16">
       <div className="ca-aurora"><span /><span /><span /></div>
       <div className="relative">
-        <span className="ca-mono text-[0.7rem] uppercase tracking-[0.2em] text-primary">Identity infrastructure</span>
-        <h2 className="mt-4 max-w-md text-[2.9rem] font-bold leading-[1.05] tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>
-          One login. <span className="ca-text-chai-anim">Every app</span> you trust.
+        <span className="ca-mono text-[0.7rem] uppercase tracking-[0.2em] text-primary">{eyebrow}</span>
+        <h2 className="mt-4 max-w-md text-4xl font-bold leading-[1.1] tracking-tight xl:text-[2.6rem]" style={{ fontFamily: '"Sora", sans-serif' }}>
+          {title}
         </h2>
-        <p className="mt-4 max-w-sm text-muted-foreground">
-          OpenID Connect sign-in for your products, with secure sessions and granular consent.
-        </p>
+        <p className="mt-4 max-w-sm text-muted-foreground">{text}</p>
       </div>
 
-      <div className="relative ca-glass ca-glow-border ca-float-slow mx-auto w-full max-w-md rounded-2xl p-5">
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-accent text-primary">
-              <ShieldCheck className="h-4.5 w-4.5" />
+      <ul className="relative max-w-md space-y-5">
+        {points.map(({ icon: Icon, title, text }) => (
+          <li key={title} className="flex items-start gap-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-accent text-primary">
+              <Icon className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-sm font-semibold">Session verified</p>
-              <p className="text-xs text-muted-foreground">Chrome · Ahmedabad, IN</p>
+              <p className="text-sm font-semibold text-foreground">{title}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{text}</p>
             </div>
-          </div>
-          <span className="flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[0.7rem] text-good">
-            <span className="ca-dot-live" /> Live
-          </span>
-        </div>
-        <ul className="space-y-3 pt-4 text-sm">
-          {[
-            { icon: KeyRound, t: "Authorization code + PKCE", s: "Enabled" },
-            { icon: Lock, t: "Token rotation", s: "Every 15 min" },
-            { icon: Fingerprint, t: "Passkeys", s: "Enabled" },
-          ].map(({ icon: I, t, s }) => (
-            <li key={t} className="flex items-center justify-between">
-              <span className="flex items-center gap-2.5 text-text-soft">
-                <I className="h-4 w-4 text-muted-foreground" /> {t}
-              </span>
-              <span className="ca-mono text-xs text-muted-foreground">{s}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+          </li>
+        ))}
+      </ul>
 
-      <AnimatedSecurityChecks />
+      <p className="relative flex items-center gap-2 text-xs text-muted-foreground">
+        <ShieldCheck className="h-4 w-4 text-good" /> Protected by bot detection and rate limiting
+      </p>
     </div>
   );
 }
@@ -140,8 +76,10 @@ export function AuthLayout({
   title,
   subtitle,
   children,
-  footer
+  footer,
+  variant = "login",
 }: {
+  variant?: Variant;
   title?: string;
   subtitle?: ReactNode;
   children: ReactNode;
@@ -150,28 +88,33 @@ export function AuthLayout({
   return (
     <div className="ca-root relative grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
       <div className="ca-aurora lg:hidden"><span /><span /><span /></div>
-      <div className="ca-grid pointer-events-none absolute inset-0" />
-      <main className="relative flex min-h-screen flex-col px-5 py-8 sm:px-10">
+      <div className="ca-grid pointer-events-none absolute inset-0 opacity-60" />
+      <main className="relative flex min-h-screen flex-col px-5 py-4 sm:px-10">
         <div className="flex items-center justify-between">
           <Logo />
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Link href="/" className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> <span className="hidden sm:inline">Back to site</span><span className="sm:hidden">Home</span>
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
-        <div className="flex flex-1 items-center justify-center py-10">
-          <div className="ca-glass ca-fade-up w-full max-w-[440px] rounded-3xl p-7 sm:p-9">
+        <div className="flex flex-1 items-center justify-center py-4">
+          <div className="ca-glass ca-fade-up w-full max-w-[420px] rounded-3xl p-6 sm:px-8 sm:py-7">
             <div className="ca-stagger">
-              {title && <h1 className="text-[2.15rem] font-bold leading-tight tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>{title}</h1>}
-              {subtitle && <p className="mt-2.5 text-[0.95rem] text-text-soft">{subtitle}</p>}
-              <div className="mt-8">{children}</div>
-              {footer && <div className="mt-8 text-center text-sm text-muted-foreground">{footer}</div>}
+              {title && <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>{title}</h1>}
+              {subtitle && <p className="mt-2 text-sm text-text-soft">{subtitle}</p>}
+              <div className="mt-5">{children}</div>
+              {footer && <div className="mt-5 border-t border-border/60 pt-4 text-center text-sm text-muted-foreground">{footer}</div>}
             </div>
           </div>
         </div>
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="h-3 w-3" /> Encrypted in transit · Sessions stored in httpOnly cookies
+        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3 w-3" /> Encrypted in transit · httpOnly session cookies
         </p>
       </main>
       <aside className="relative hidden overflow-hidden border-l border-border lg:block">
-        <TrustPanel />
+        <TrustPanel variant={variant} />
       </aside>
     </div>
   );

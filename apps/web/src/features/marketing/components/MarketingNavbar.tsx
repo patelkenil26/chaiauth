@@ -28,7 +28,7 @@ export function MarketingNavbar() {
           : "border-b border-transparent bg-transparent"
       }`}
     >
-      <div className={`mx-auto flex max-w-6xl items-center justify-between px-5 transition-all duration-300 sm:px-8 ${scrolled ? "h-14" : "h-[4.5rem]"}`}>
+      <div className={`mx-auto flex max-w-6xl items-center justify-between px-5 transition-all duration-300 sm:px-8 ${scrolled ? "h-14" : "h-16"}`}>
         <Logo />
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
@@ -38,16 +38,12 @@ export function MarketingNavbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`group relative rounded-lg px-3.5 py-2 text-sm font-medium transition-colors hover:text-foreground ${
-                  active ? "text-foreground" : "text-muted-foreground"
+                aria-current={active ? "page" : undefined}
+                className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-foreground ${
+                  active ? "bg-accent text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {l.label}
-                <span
-                  className={`absolute inset-x-3.5 -bottom-0.5 h-px origin-left bg-gradient-to-r from-[var(--chai-bright)] to-[var(--chai-mid)] transition-transform duration-300 ${
-                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  }`}
-                />
               </Link>
             );
           })}

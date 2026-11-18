@@ -12,12 +12,10 @@ export const metadata = constructMetadata({
 });
 
 const steps = [
-  { n: "01", title: "Create an app", text: "Register your application in the developer console and add your callback URLs." },
-  { n: "02", title: "Connect with OIDC", text: "Point any OpenID Connect library at our discovery URL with your client ID and secret." },
-  { n: "03", title: "Let users in", text: "Users sign in with password, social, MFA or passkeys and approve access on a clear consent screen." },
+  { n: "01", title: "Create an app", text: "Register it in the developer console and add your callback URLs." },
+  { n: "02", title: "Connect with OIDC", text: "Point any OIDC library at our discovery URL with your client ID." },
+  { n: "03", title: "Let users in", text: "Users sign in with any method and approve access on a consent screen." },
 ];
-
-const works = ["Next.js", "Auth.js", "Express", "Passport.js", "Remix", "SvelteKit", "Django", "Laravel", "Spring Security", "ASP.NET"];
 
 // bento layout: [feature index, grid span classes]
 const bento: [number, string][] = [
@@ -35,31 +33,29 @@ export default function HomePage() {
       <section className="relative overflow-hidden">
         <div className="ca-aurora"><span /><span /><span /></div>
         <div className="ca-grid pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto max-w-6xl px-5 pb-10 pt-20 text-center sm:px-8 sm:pt-28">
+        <div className="relative mx-auto max-w-6xl px-5 pb-8 pt-16 text-center sm:px-8 sm:pt-24">
           <Reveal>
             <span className="ca-eyebrow">
               <span className="ca-dot-live" /> OpenID Connect · Passkeys · MFA
             </span>
           </Reveal>
           <Reveal delay={90}>
-            <h1 className="mx-auto mt-7 max-w-4xl text-[2.6rem] font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               Authentication that <span className="ca-text-chai-anim">feels warm</span>, and stays secure.
             </h1>
           </Reveal>
           <Reveal delay={180}>
-            <p className="mx-auto mt-7 max-w-2xl text-base leading-relaxed text-text-soft sm:text-lg">
-              ChaiAuth is the identity provider for your apps. Passwords, social login, authenticator apps and
-              passkeys, with a developer console to manage it all.
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-text-soft">
+              An identity provider for your apps: passwords, social login, MFA and passkeys, with a developer console.
             </p>
           </Reveal>
           <Reveal delay={270}>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Link href="/register" className="ca-btn ca-btn-primary ca-btn-lg">
                 Get started free <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/docs" className="ca-btn ca-btn-ghost ca-btn-lg">Read the docs</Link>
             </div>
-            <p className="mt-5 text-xs text-muted-foreground">Free to start · Standards-based · No lock-in</p>
           </Reveal>
           <Reveal delay={380}>
             <HeroShowcase />
@@ -67,33 +63,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* WORKS WITH */}
-      <section className="mx-auto max-w-6xl px-5 pt-14 sm:px-8">
-        <p className="text-center text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-          Plugs into any OpenID Connect library
-        </p>
-        <div className="ca-marquee mt-6">
-          <div className="ca-marquee-track">
-            {[...works, ...works].map((w, i) => (
-              <span
-                key={`${w}-${i}`}
-                className="whitespace-nowrap rounded-full border border-border bg-secondary/40 px-5 py-2 text-sm font-medium text-text-soft"
-              >
-                {w}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* STATS */}
-      <section className="mx-auto max-w-6xl px-5 pt-14 sm:px-8">
+      <section className="mx-auto max-w-6xl px-5 pt-10 sm:px-8">
         <Reveal>
-          <div className="grid grid-cols-2 gap-y-8 border-y border-border py-9 md:grid-cols-4 md:divide-x md:divide-border">
+          <div className="grid grid-cols-2 gap-y-6 border-y border-border py-7 md:grid-cols-4 md:divide-x md:divide-border">
             {stats.map((s) => (
               <div key={s.value} className="px-4 text-left md:px-8">
-                <div className="font-display text-3xl font-semibold tabular-nums tracking-tight text-foreground sm:text-[2.6rem]">{s.value}</div>
-                <div className="ca-mono mt-2 text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">{s.label}</div>
+                <div className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{s.value}</div>
+                <div className="ca-mono mt-1.5 text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">{s.label}</div>
               </div>
             ))}
           </div>
@@ -104,7 +81,7 @@ export default function HomePage() {
       <Section
         eyebrow="Features"
         title="Everything sign-in needs"
-        subtitle="The pieces you would otherwise stitch together yourself, built in and working together."
+        subtitle="The pieces you would otherwise stitch together yourself."
       >
         <div className="grid gap-4 lg:grid-cols-6">
           {bento.map(([idx, span], i) => {
@@ -112,15 +89,15 @@ export default function HomePage() {
             const big = span.includes("col-span-4");
             return (
               <Reveal key={title} delay={i * 80} className={span}>
-                <SpotlightCard className="h-full rounded-3xl p-7">
+                <SpotlightCard className="h-full rounded-2xl p-6">
                   <span className="ca-tile">
                     <Icon className="h-5 w-5" />
                   </span>
-                  <h3 className="mt-6 text-xl font-semibold tracking-tight text-foreground">{title}</h3>
-                  <p className="mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground">{description}</p>
+                  <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">{title}</h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{description}</p>
                   {big && (
-                    <div className="ca-mono mt-6 flex flex-wrap gap-2 text-[0.7rem] text-text-soft">
-                      {["/.well-known/openid-configuration", "/o/authorize", "/o/token", "/o/userinfo"].map((p) => (
+                    <div className="ca-mono mt-5 flex flex-wrap gap-2 text-[0.7rem] text-text-soft">
+                      {["/.well-known/openid-configuration", "/o/authorize", "/o/token"].map((p) => (
                         <span key={p} className="rounded-md border border-border bg-background/50 px-2.5 py-1">{p}</span>
                       ))}
                     </div>
@@ -155,15 +132,14 @@ export default function HomePage() {
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <Reveal>
             <span className="ca-eyebrow">For developers</span>
-            <h2 className="mt-5 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Built on open standards</h2>
-            <p className="mt-4 text-text-soft">
-              No proprietary lock-in. If your framework speaks OpenID Connect, it speaks ChaiAuth.
+            <h2 className="mt-5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Built on open standards</h2>
+            <p className="mt-3 text-text-soft">
+              If your framework speaks OpenID Connect, it speaks ChaiAuth.
             </p>
-            <ul className="mt-7 space-y-3.5 text-sm text-text-soft">
+            <ul className="mt-6 space-y-3 text-sm text-text-soft">
               {[
                 "Authorization Code flow with PKCE",
                 "Standard discovery document",
-                "Consent screen for every third-party app",
                 "Rotating client secrets",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-3">
@@ -206,9 +182,9 @@ export default function HomePage() {
       {/* FAQ */}
       <Section eyebrow="FAQ" title="Frequently asked questions">
         <div className="mx-auto max-w-3xl divide-y divide-border border-y border-border">
-          {faqs.map((f, i) => (
-            <Reveal key={f.q} delay={i * 60}>
-              <details className="ca-faq group py-5">
+          {faqs.slice(0, 4).map((f, i) => (
+            <Reveal key={f.q} delay={i * 40}>
+              <details className="ca-faq group py-4">
                 <summary className="flex cursor-pointer items-center justify-between gap-4 text-base font-medium text-foreground transition-colors hover:text-primary">
                   {f.q}
                   <Plus className="ca-faq-icon h-5 w-5 shrink-0 text-primary transition-transform duration-300" />
