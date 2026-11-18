@@ -6,7 +6,7 @@ export function HeroShowcase() {
   return (
     <div className="relative mx-auto mt-16 w-full max-w-5xl px-2 sm:px-0" aria-hidden>
       {/* glow behind the window */}
-      <div className="absolute inset-x-10 -top-6 h-40 rounded-full bg-[var(--chai-mid)]/25 blur-3xl" />
+      <div className="absolute inset-x-10 -top-6 h-40 rounded-full bg-[var(--chai-mid)]/25 blur-3xl dark:hidden" />
 
       {/* browser window */}
       <div className="ca-glass relative overflow-hidden rounded-3xl">

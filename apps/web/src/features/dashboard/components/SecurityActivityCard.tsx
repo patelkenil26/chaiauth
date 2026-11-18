@@ -18,7 +18,7 @@ export function SecurityActivityCard() {
     : "Recently";
 
   return (
-    <section className="ca-glass rounded-md p-6">
+    <section className="ca-glass rounded-2xl p-6">
       <div className="flex items-center gap-4">
         <IconTile>
           <ShieldCheck className="h-5 w-5" />

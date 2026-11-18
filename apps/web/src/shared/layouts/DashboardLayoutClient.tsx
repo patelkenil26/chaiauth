@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Blocks, BookOpen, LogOut, Menu, X, ShieldCheck, Smartphone, BadgeCheck, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/shared/components/Logo";
+import { ThemeToggle } from "@/shared/components/ThemeToggle";
 
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import { useUserProfile } from "@/features/dashboard/hooks/useUserProfile";
@@ -120,7 +121,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
   );
 
   return (
-    <div className="ca-root ca-dash dark min-h-screen">
+    <div className="ca-root ca-dash min-h-screen">
       <div className="pointer-events-none fixed inset-0 overflow-hidden opacity-40" aria-hidden>
         <div className="ca-aurora">
           <span />
@@ -186,6 +187,7 @@ export function DashboardLayoutClient({ children }: { children: React.ReactNode 
                 <Link href="/docs" className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex">
                   Docs <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
+                <ThemeToggle />
                 <span className="ca-avatar h-9 w-9 text-xs lg:hidden">{initialsOf(user?.name)}</span>
               </div>
             </div>

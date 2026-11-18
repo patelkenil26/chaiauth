@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/shared/components/Logo";
+import { ThemeToggle } from "@/shared/components/ThemeToggle";
 import { navLinks } from "../content";
 
 export function MarketingNavbar() {
@@ -53,6 +54,7 @@ export function MarketingNavbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           <Link href="/login" className="ca-btn ca-btn-ghost !h-10">Sign in</Link>
           <Link href="/register" className="ca-btn ca-btn-primary !h-10">Get started</Link>
         </div>

@@ -32,7 +32,7 @@ function MfaVerifyStep({ mfaToken }: { mfaToken: string }) {
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-background">
-      <div className="w-full max-w-sm p-8 ca-glass rounded-xl space-y-6">
+      <div className="w-full max-w-sm p-8 ca-glass rounded-2xl space-y-6">
         <div className="text-center">
           <h1 className="text-2xl font-semibold mb-2">Two-Factor Authentication</h1>
           <p className="text-sm text-muted-foreground">

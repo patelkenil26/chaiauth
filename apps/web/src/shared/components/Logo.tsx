@@ -11,7 +11,7 @@ export function Logo({ className }: { className?: string }) {
               <stop offset="100%" stopColor="#ea580c" />
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#ea580c" floodOpacity="0.4"/>
+              <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#ea580c" floodOpacity="0.18"/>
             </filter>
           </defs>
           

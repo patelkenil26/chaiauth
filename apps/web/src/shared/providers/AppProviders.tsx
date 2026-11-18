@@ -12,7 +12,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         attribute="class"
         defaultTheme="dark"
         enableSystem={false}
-        forcedTheme="dark"
       >
         {children}
         {/* Toaster is placed here so it's available on every page and gets the dark theme */}

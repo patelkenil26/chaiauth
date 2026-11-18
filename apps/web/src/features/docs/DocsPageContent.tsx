@@ -200,7 +200,7 @@ export default NextAuth(authOptions);`;
   );
 
   return (
-    <div className="ca-root dark min-h-screen bg-background">
+    <div className="ca-root min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6">

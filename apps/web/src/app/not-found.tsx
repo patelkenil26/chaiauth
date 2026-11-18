@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 ca-root dark">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 ca-root">
       <div className="max-w-md text-center ca-fade-up">
         <h1 className="text-[5rem] font-bold text-foreground" style={{fontFamily: '"Sora", sans-serif'}}>404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground" style={{fontFamily: '"Sora", sans-serif'}}>Page not found</h2>

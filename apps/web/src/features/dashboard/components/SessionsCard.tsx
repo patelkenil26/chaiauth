@@ -94,7 +94,7 @@ export function SessionsCard() {
   } = useSessions();
 
   return (
-    <section className="ca-glass rounded-md p-6 space-y-5">
+    <section className="ca-glass rounded-2xl p-6 space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">

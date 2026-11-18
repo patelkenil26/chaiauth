@@ -16,7 +16,7 @@ export function ProfileDetailsCard({ user }: { user: UserProfile }) {
 
   return (
     <section className="ca-glass relative overflow-hidden p-6 sm:p-8">
-      <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[var(--chai-mid)]/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-[var(--chai-mid)]/20 blur-3xl dark:hidden" />
 
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
         <span className="ca-avatar h-20 w-20 text-2xl">{initialsOf(user.name)}</span>

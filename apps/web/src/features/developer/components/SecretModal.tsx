@@ -14,7 +14,7 @@ export function SecretModal({ secret, kind = "client secret", onClose }: SecretM
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="secret-title">
-      <section className="ca-glass w-full max-w-lg rounded-xl p-6 ca-fade-up">
+      <section className="ca-raised w-full max-w-lg rounded-2xl p-6 ca-fade-up">
         <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent text-primary">
           <Check className="h-5 w-5" />
         </span>

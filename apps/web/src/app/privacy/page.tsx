@@ -9,7 +9,7 @@ export const metadata = constructMetadata(pageMetadata.privacy);
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="ca-root dark min-h-screen">
+    <div className="ca-root min-h-screen">
       <div className="ca-grid pointer-events-none fixed inset-0" />
       <div className="relative mx-auto max-w-3xl px-6 py-12 sm:px-10">
         <header className="mb-12 flex items-center justify-between">

@@ -11,7 +11,7 @@ interface DeleteConfirmModalProps {
 export function DeleteConfirmModal({ app, onClose, onConfirm }: DeleteConfirmModalProps) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
-      <section className="ca-glass w-full max-w-md rounded-xl p-6 ca-fade-up">
+      <section className="ca-raised w-full max-w-md rounded-2xl p-6 ca-fade-up">
         <h2 id="delete-title" className="font-display text-xl font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>
           Delete {app.name}?
         </h2>

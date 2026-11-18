@@ -89,11 +89,11 @@ export default function HomePage() {
       {/* STATS */}
       <section className="mx-auto max-w-6xl px-5 pt-14 sm:px-8">
         <Reveal>
-          <div className="ca-glass grid grid-cols-2 gap-6 rounded-3xl p-6 sm:p-8 md:grid-cols-4 md:gap-0 md:divide-x md:divide-border">
+          <div className="grid grid-cols-2 gap-y-8 border-y border-border py-9 md:grid-cols-4 md:divide-x md:divide-border">
             {stats.map((s) => (
-              <div key={s.value} className="text-center">
-                <div className="font-display text-2xl font-bold ca-text-chai sm:text-4xl">{s.value}</div>
-                <div className="mt-1.5 text-xs text-muted-foreground sm:text-sm">{s.label}</div>
+              <div key={s.value} className="px-4 text-left md:px-8">
+                <div className="font-display text-3xl font-semibold tabular-nums tracking-tight text-foreground sm:text-[2.6rem]">{s.value}</div>
+                <div className="ca-mono mt-2 text-[0.68rem] uppercase tracking-[0.14em] text-muted-foreground">{s.label}</div>
               </div>
             ))}
           </div>
@@ -113,10 +113,10 @@ export default function HomePage() {
             return (
               <Reveal key={title} delay={i * 80} className={span}>
                 <SpotlightCard className="h-full rounded-3xl p-7">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/25">
-                    <Icon className="h-6 w-6" />
+                  <span className="ca-tile">
+                    <Icon className="h-5 w-5" />
                   </span>
-                  <h3 className="mt-6 text-xl font-semibold text-foreground">{title}</h3>
+                  <h3 className="mt-6 text-xl font-semibold tracking-tight text-foreground">{title}</h3>
                   <p className="mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground">{description}</p>
                   {big && (
                     <div className="ca-mono mt-6 flex flex-wrap gap-2 text-[0.7rem] text-text-soft">
@@ -137,17 +137,14 @@ export default function HomePage() {
 
       {/* STEPS */}
       <Section eyebrow="How it works" title="Up and running in three steps">
-        <div className="relative grid gap-5 md:grid-cols-3">
-          <div className="pointer-events-none absolute left-[16%] right-[16%] top-[3.1rem] hidden h-px bg-gradient-to-r from-transparent via-[var(--chai-mid)]/60 to-transparent md:block" />
+        <div className="grid gap-x-10 gap-y-10 md:grid-cols-3">
           {steps.map((s, i) => (
             <Reveal key={s.n} delay={i * 120}>
-              <SpotlightCard className="h-full rounded-3xl p-7">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-border bg-background/70 font-display text-sm font-bold ca-text-chai">
-                  {s.n}
-                </span>
-                <h3 className="mt-6 text-lg font-semibold text-foreground">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
-              </SpotlightCard>
+              <div className="border-t border-border pt-6">
+                <span className="ca-mono text-xs font-semibold tracking-[0.18em] text-primary">{s.n}</span>
+                <h3 className="mt-5 text-xl font-semibold tracking-tight text-foreground">{s.title}</h3>
+                <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -170,7 +167,7 @@ export default function HomePage() {
                 "Rotating client secrets",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-border text-primary">
                     <Check className="h-3 w-3" />
                   </span>
                   {t}
@@ -208,11 +205,11 @@ export default function HomePage() {
 
       {/* FAQ */}
       <Section eyebrow="FAQ" title="Frequently asked questions">
-        <div className="mx-auto max-w-3xl space-y-3">
+        <div className="mx-auto max-w-3xl divide-y divide-border border-y border-border">
           {faqs.map((f, i) => (
             <Reveal key={f.q} delay={i * 60}>
-              <details className="ca-faq ca-glass group rounded-2xl px-6 py-5 transition-colors">
-                <summary className="flex cursor-pointer items-center justify-between gap-4 text-base font-semibold text-foreground">
+              <details className="ca-faq group py-5">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 text-base font-medium text-foreground transition-colors hover:text-primary">
                   {f.q}
                   <Plus className="ca-faq-icon h-5 w-5 shrink-0 text-primary transition-transform duration-300" />
                 </summary>

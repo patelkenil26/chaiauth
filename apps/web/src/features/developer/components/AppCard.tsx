@@ -14,7 +14,7 @@ export function AppCard({ app, onEdit, onDelete }: AppCardProps) {
   const { copied, copy } = useCopy();
 
   return (
-    <article className="ca-glass rounded-md p-5 sm:p-6 transition-all hover:border-primary/20 hover:shadow-sm">
+    <article className="ca-glass ca-lift rounded-2xl p-5 sm:p-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-4">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-accent text-primary">

@@ -14,7 +14,7 @@ export function PageHeader({ eyebrow, title, description, actions }: PageHeaderP
       <div className="min-w-0">
         <span className="ca-eyebrow">{eyebrow}</span>
         <h1
-          className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+          className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-[2.6rem] sm:leading-[1.1]"
           style={{ fontFamily: '"Sora", sans-serif' }}
         >
           {title}

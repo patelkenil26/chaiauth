@@ -97,7 +97,7 @@ export function ConsentScreen() {
         </p>
       </div>
 
-      <div className="ca-glass rounded-xl p-5 space-y-4">
+      <div className="ca-glass rounded-2xl p-5 space-y-4">
         <div className="flex items-center gap-2 border-b border-border/50 pb-3">
           <ShieldAlert className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">Requested access</span>

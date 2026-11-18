@@ -55,10 +55,10 @@ export function FeatureGrid({ items }: { items: Feature[] }) {
       {items.map(({ icon: Icon, title, description }, i) => (
         <Reveal key={title} delay={(i % 3) * 90}>
           <SpotlightCard className="h-full rounded-2xl p-6">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
+            <span className="ca-tile">
               <Icon className="h-5 w-5" />
             </span>
-            <h3 className="mt-5 text-lg font-semibold text-foreground">{title}</h3>
+            <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">{title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
           </SpotlightCard>
         </Reveal>
