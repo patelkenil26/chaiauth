@@ -39,11 +39,18 @@ const NAV = [
     ],
   },
 ];
-const ALL_IDS = NAV.flatMap((g) => g.items.map((i) => i.id));
+const FLAT = NAV.flatMap((g) => g.items.map((i) => ({ ...i, group: g.group })));
+const ALL_IDS = FLAT.map((i) => i.id);
+
+// Renders its children only while it is the selected docs page
+function Page({ id, active, children }: { id: string; active: string; children: ReactNode }) {
+  if (id !== active) return null;
+  return <div key={id} className="ca-fade-up">{children}</div>;
+}
 
 function H2({ id, children, sub }: { id: string; children: ReactNode; sub?: string }) {
   return (
-    <section id={id} className="scroll-mt-24 pt-16 first:pt-0">
+    <section id={id} className="scroll-mt-24">
       <Reveal>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl" style={{ fontFamily: '"Sora", sans-serif' }}>
           {children}
@@ -70,7 +77,11 @@ const METHOD_STYLE: Record<string, string> = {
 
 export function DocsPageContent() {
   const [open, setOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("quick-start");
+  const [page, setPage] = useState("quick-start");
+  const activeSection = page;
+  const index = ALL_IDS.indexOf(page);
+  const prev = index > 0 ? FLAT[index - 1] : null;
+  const next = index < FLAT.length - 1 ? FLAT[index + 1] : null;
   const [progress, setProgress] = useState(0);
 
   const backendHost = env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "");
@@ -135,19 +146,19 @@ export default NextAuth(authOptions);`;
   const { sdkProviderCode, sdkUsageCode, embeddedFormsCode, embeddedBackendCode, brandedEmailsCode, loginContextCode, apiKeyCode, apiKeyResponse } =
     buildSnippets(backendHost, frontendHost);
 
-  // Scroll spy + reading progress
+  // Keep the selected page in sync with the URL hash (deep links, back/forward)
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => e.isIntersecting && setActiveSection(e.target.id));
-      },
-      { rootMargin: "-20% 0px -65% 0px", threshold: 0.1 },
-    );
-    ALL_IDS.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+    const fromHash = () => {
+      const id = window.location.hash.slice(1);
+      if (ALL_IDS.includes(id)) setPage(id);
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+  }, []);
 
+  // Reading progress (resets when the page changes)
+  useEffect(() => {
     const onScroll = () => {
       const h = document.documentElement;
       const max = h.scrollHeight - h.clientHeight;
@@ -155,16 +166,15 @@ export default NextAuth(authOptions);`;
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [page]);
 
   const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     setOpen(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setPage(id);
+    window.history.pushState(null, "", `#${id}`);
+    window.scrollTo({ top: 0 });
   };
 
   // A render helper, not a component: components must not be created during render
@@ -251,8 +261,14 @@ export default NextAuth(authOptions);`;
 
         {/* Content */}
         <main className="min-w-0 px-5 pb-32 sm:px-10">
+          {/* Breadcrumb on every page except the first, which has the hero */}
+          {page !== "quick-start" && (
+            <p className="ca-mono pb-8 pt-12 text-[0.7rem] uppercase text-muted-foreground lg:pt-16" style={{ letterSpacing: ".16em" }}>
+              {FLAT[index]?.group} / {FLAT[index]?.label}
+            </p>
+          )}
           {/* Hero */}
-          <div className="relative -mx-5 overflow-hidden px-5 pb-12 pt-12 sm:-mx-10 sm:px-10 lg:pt-16">
+          <div className={`relative -mx-5 overflow-hidden px-5 pb-12 pt-12 sm:-mx-10 sm:px-10 lg:pt-16 ${page === "quick-start" ? "" : "hidden"}`}>
             <div className="ca-aurora opacity-70"><span /><span /><span /></div>
             <div className="ca-grid pointer-events-none absolute inset-0" />
             <div className="relative ca-fade-up">
@@ -273,6 +289,7 @@ export default NextAuth(authOptions);`;
             </div>
           </div>
 
+          <Page id="quick-start" active={page}>
           <H2 id="quick-start" sub="Three steps from zero to a signed-in user.">Quick start</H2>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             {[
@@ -292,7 +309,9 @@ export default NextAuth(authOptions);`;
               </Reveal>
             ))}
           </div>
+          </Page>
 
+          <Page id="configure-your-app" active={page}>
           <H2
             id="configure-your-app"
             sub="Create credentials in the developer console. Redirect URIs must use HTTPS (http is allowed only for localhost) and are matched exactly."
@@ -324,7 +343,9 @@ export default NextAuth(authOptions);`;
               </table>
             </div>
           </Reveal>
+          </Page>
 
+          <Page id="authjs" active={page}>
           <H2
             id="authjs"
             sub="ChaiAuth publishes an OpenID discovery document, so Auth.js finds the token, userinfo and JWKS endpoints by itself."
@@ -339,7 +360,9 @@ export default NextAuth(authOptions);`;
             Using another library? Point it at <code className="ca-mono text-primary">{backendHost}/.well-known/openid-configuration</code> and
             use the Authorization Code flow with PKCE.
           </Callout>
+          </Page>
 
+          <Page id="authorization-flow" active={page}>
           <H2 id="authorization-flow" sub="Send the browser to the sign-in and consent screen. Generate a fresh state and PKCE pair for every request.">
             Authorization flow
           </H2>
@@ -349,7 +372,9 @@ export default NextAuth(authOptions);`;
               Preview consent screen <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
+          </Page>
 
+          <Page id="token-exchange" active={page}>
           <H2 id="token-exchange" sub="Do this on your server so the client secret never reaches the browser. Public clients (SPA / mobile) skip client_secret and rely on PKCE.">
             Token exchange
           </H2>
@@ -360,7 +385,9 @@ export default NextAuth(authOptions);`;
           <Callout>
             Use <code className="ca-mono text-primary">grant_type=refresh_token</code> with your refresh token to get new access tokens.
           </Callout>
+          </Page>
 
+          <Page id="react-sdk" active={page}>
           <H2
             id="react-sdk"
             sub="@chaiauth/react runs the whole flow for you: PKCE, state and nonce checks, token refresh and sign-out, with ready-made components."
@@ -377,7 +404,9 @@ export default NextAuth(authOptions);`;
             <code className="ca-mono text-primary">&lt;ChaiAuthProvider&gt;</code>. The package lives in this repo (
             <code className="ca-mono text-primary">packages/react</code>) until it is published to npm.
           </Callout>
+          </Page>
 
+          <Page id="embedded-sign-in" active={page}>
           <H2
             id="embedded-sign-in"
             sub="Like Clerk: the form lives in your own page and theme. Your users never see a ChaiAuth screen."
@@ -414,7 +443,9 @@ export default NextAuth(authOptions);`;
             the sign-in in the browser (PKCE only). With it, your server owns the PKCE verifier and client secret, and the browser
             only ever holds a one-time code. Passwords go from the browser straight to ChaiAuth and never touch your server.
           </Callout>
+          </Page>
 
+          <Page id="branded-emails" active={page}>
           <H2
             id="branded-emails"
             sub="When a user acts on YOUR site, every email goes out as your app. They never learn that ChaiAuth exists."
@@ -444,7 +475,9 @@ export default NextAuth(authOptions);`;
             with the email provider. <strong>Not covered:</strong> Google&apos;s own consent screen still shows the name of the
             Google OAuth client, which is ChaiAuth&apos;s.
           </Callout>
+          </Page>
 
+          <Page id="endpoints" active={page}>
           <H2 id="endpoints" sub={`Base URL: ${backendHost}`}>Endpoints</H2>
           <Reveal className="mt-6">
             <div className="ca-glass divide-y divide-border overflow-hidden rounded-2xl">
@@ -473,7 +506,9 @@ export default NextAuth(authOptions);`;
               ))}
             </div>
           </Reveal>
+          </Page>
 
+          <Page id="scopes" active={page}>
           <H2 id="scopes" sub="Request only what you need. Unsupported scopes are ignored; a request with no supported scope is rejected.">
             Scopes &amp; claims
           </H2>
@@ -492,7 +527,9 @@ export default NextAuth(authOptions);`;
               ))}
             </div>
           </Reveal>
+          </Page>
 
+          <Page id="login-context" active={page}>
           <H2
             id="login-context"
             sub="Every sign-in is recorded and the facts are handed to your app, so you never write device or location detection yourself."
@@ -512,7 +549,9 @@ export default NextAuth(authOptions);`;
             verification when <code className="ca-mono text-primary">is_new_device</code> is true. In browser-only mode the SDK
             exposes it as <code className="ca-mono text-primary">user.login_context</code>. Only request the scope if you need it.
           </Callout>
+          </Page>
 
+          <Page id="server-api" active={page}>
           <H2
             id="server-api"
             sub="Create an API key in the developer console (open your app, then API keys) to call ChaiAuth from your own backend, without a user present."
@@ -527,7 +566,9 @@ export default NextAuth(authOptions);`;
             Keys are shown once, stored only as a hash, can expire, and can be revoked at any time. You can read only users who
             approved <em>your</em> app, and only the claims their consent covers. Each key is limited to 120 requests per minute.
           </Callout>
+          </Page>
 
+          <Page id="security-notes" active={page}>
           <H2 id="security-notes">Security notes</H2>
           <Reveal className="mt-6">
             <ul className="ca-glass space-y-4 rounded-2xl p-6 text-sm leading-6 text-text-soft">
@@ -548,31 +589,36 @@ export default NextAuth(authOptions);`;
               ))}
             </ul>
           </Reveal>
+          </Page>
+
+          {/* Previous / next */}
+          <div className="mt-16 grid gap-3 border-t border-border/70 pt-8 sm:grid-cols-2">
+            {prev ? (
+              <a href={`#${prev.id}`} onClick={(e) => go(e, prev.id)} className="ca-glass group rounded-2xl p-4 transition-colors hover:bg-accent/30">
+                <span className="text-xs text-muted-foreground">Previous</span>
+                <span className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <ChevronRight className="h-4 w-4 rotate-180 text-primary transition-transform group-hover:-translate-x-0.5" />
+                  {prev.label}
+                </span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {next && (
+              <a href={`#${next.id}`} onClick={(e) => go(e, next.id)} className="ca-glass group rounded-2xl p-4 text-right transition-colors hover:bg-accent/30 sm:col-start-2">
+                <span className="text-xs text-muted-foreground">Next</span>
+                <span className="mt-1 flex items-center justify-end gap-2 text-sm font-semibold text-foreground">
+                  {next.label}
+                  <ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </a>
+            )}
+          </div>
         </main>
 
         {/* Right rail */}
         <aside className="hidden border-l border-border/70 px-6 py-14 xl:block">
           <div className="sticky top-28 space-y-6">
-            <div>
-              <p className="ca-mono text-[0.65rem] uppercase text-muted-foreground" style={{ letterSpacing: ".16em" }}>On this page</p>
-              <ul className="mt-3 space-y-1.5 border-l border-border">
-                {NAV.flatMap((g) => g.items).map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={`#${item.id}`}
-                      onClick={(e) => go(e, item.id)}
-                      className={`-ml-px block border-l py-1 pl-4 text-xs transition-colors ${
-                        activeSection === item.id
-                          ? "border-primary font-medium text-foreground"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
             <div className="ca-glass rounded-2xl p-4">
               <BookOpen className="h-5 w-5 text-primary" />
               <p className="mt-3 text-sm font-medium text-foreground">Need a hand?</p>
