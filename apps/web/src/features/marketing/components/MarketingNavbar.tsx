@@ -31,7 +31,7 @@ export function MarketingNavbar() {
       <div className={`mx-auto flex max-w-6xl items-center justify-between px-5 transition-all duration-300 sm:px-8 ${scrolled ? "h-14" : "h-16"}`}>
         <Logo />
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
           {navLinks.map((l) => {
             const active = pathname === l.href;
             return (
@@ -49,25 +49,28 @@ export function MarketingNavbar() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <ThemeToggle />
           <Link href="/login" className="ca-btn ca-btn-ghost !h-10">Sign in</Link>
           <Link href="/register" className="ca-btn ca-btn-primary !h-10">Get started</Link>
         </div>
 
-        <button
-          type="button"
-          className="rounded-lg p-2 text-foreground md:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-1 lg:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="rounded-lg p-2 text-foreground"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       <div
-        className={`grid overflow-hidden transition-[grid-template-rows] duration-300 md:hidden ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        className={`grid overflow-hidden transition-[grid-template-rows] duration-300 lg:hidden ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
       >
         <div className="min-h-0 overflow-hidden">
           <div className="border-t border-border/60 px-5 pb-5 pt-3">

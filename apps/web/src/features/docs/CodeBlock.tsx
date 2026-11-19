@@ -54,17 +54,17 @@ export function CodeBlock({ code, label, plain = false }: { code: string; label:
 
   return (
     <div className="ca-glass group overflow-hidden rounded-2xl">
-      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]/80" />
-          <span className="ca-mono ml-3 text-xs text-muted-foreground">{label}</span>
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#ff5f57]/80" />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#febc2e]/80" />
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#28c840]/80" />
+          <span className="ca-mono ml-3 min-w-0 truncate text-xs text-muted-foreground">{label}</span>
         </div>
         <button
           type="button"
           onClick={copy}
-          className="flex items-center gap-1.5 rounded-lg border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-text-soft transition-colors hover:border-primary/40 hover:text-foreground"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background/50 px-2.5 py-1 text-xs font-medium text-text-soft transition-colors hover:border-primary/40 hover:text-foreground"
           aria-label={`Copy ${label}`}
         >
           {copied ? <Check className="h-3.5 w-3.5 text-good" /> : <Clipboard className="h-3.5 w-3.5" />}

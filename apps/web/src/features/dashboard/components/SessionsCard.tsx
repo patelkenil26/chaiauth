@@ -73,7 +73,7 @@ function SessionRow({
         <button
           onClick={() => onRevoke(session.id)}
           disabled={isRevoking}
-          className="shrink-0 opacity-0 group-hover:opacity-100 text-xs text-muted-foreground hover:text-red-400 flex items-center gap-1 transition-all px-2 py-1 rounded-md hover:bg-red-500/10 disabled:opacity-50"
+          className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 text-xs text-muted-foreground hover:text-red-400 flex items-center gap-1 transition-all px-2 py-1 rounded-md hover:bg-red-500/10 disabled:opacity-50"
         >
           {isRevoking ? <Loader2 className="h-3 w-3 animate-spin" /> : <LogOut className="h-3 w-3" />}
           Revoke
@@ -96,7 +96,7 @@ export function SessionsCard() {
   return (
     <section className="ca-glass rounded-2xl p-6 space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
         <div className="flex items-center gap-4">
           <IconTile>
             <ShieldAlert className="h-5 w-5" />
@@ -174,7 +174,7 @@ export function SessionsCard() {
 
       {sessions && sessions.length > 0 && (
         <p className="text-xs text-muted-foreground pt-1">
-          Hover over a session to see the revoke option. Revoking a session will sign out that device immediately.
+          Revoking a session will sign out that device immediately.
         </p>
       )}
     </section>

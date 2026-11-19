@@ -1,44 +1,41 @@
 import { escapeHtml } from "../../utils/html";
 import {
   baseTemplate,
+  callout,
+  codeChip,
   ctaButton,
+  fallbackLink,
   heading,
-  icon,
   infoCard,
   labeledValue,
   paragraph,
   smallPrint,
+  statusTile,
+  strong,
 } from "./base.layout";
 
 export const verificationEmail = (url: string) =>
   baseTemplate(
     "Verify your email address",
     [
-      heading("Verify your email address"),
-      paragraph(
-        "Welcome to ChaiAuth! To complete your registration and activate your account, please verify your email address by clicking the button below.",
-      ),
-      ctaButton(url, "Verify Email Address"),
-      smallPrint(
-        "If you didn't request this verification, you can safely ignore this email. Your account will remain inactive.",
-      ),
+      heading("Verify your email"),
+      paragraph("Welcome to ChaiAuth! Confirm your email address to activate your account."),
+      ctaButton(url, "Verify email"),
+      fallbackLink(url),
+      smallPrint("Didn't create an account? You can safely ignore this email. Nothing will happen."),
     ].join(""),
-    "Action required to activate your ChaiAuth account.",
+    "Confirm your email to activate your ChaiAuth account.",
   );
 
 export const magicLinkEmail = (url: string) =>
   baseTemplate(
     "Your sign-in link",
     [
-      icon("key", "f97316"),
       heading("Sign in to ChaiAuth"),
-      paragraph(
-        "Click the button below to sign in. This link works once and expires in <strong style=\"color: #ffffff;\">15 minutes</strong>.",
-      ),
+      paragraph(`Use the button below to sign in. The link works once and expires in ${strong("15 minutes")}.`),
       ctaButton(url, "Sign in"),
-      smallPrint(
-        "If you didn't request this link, you can safely ignore this email. Nobody can sign in without access to it.",
-      ),
+      fallbackLink(url),
+      smallPrint("Didn't ask for this? Ignore this email. Nobody can sign in without access to it."),
     ].join(""),
     "Your one-time sign-in link for ChaiAuth.",
   );
@@ -48,81 +45,72 @@ export const resetPasswordEmail = (url: string) =>
     "Reset your password",
     [
       heading("Reset your password"),
-      paragraph(
-        "We received a request to reset the password for your ChaiAuth account. Click the button below to choose a new secure password. This link will expire in 15 minutes.",
-      ),
-      ctaButton(url, "Reset Password"),
-      smallPrint(
-        "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.",
-      ),
+      paragraph(`We got a request to reset your ChaiAuth password. This link expires in ${strong("15 minutes")}.`),
+      ctaButton(url, "Choose a new password"),
+      fallbackLink(url),
+      smallPrint("Didn't request this? Ignore this email and your password will stay the same."),
     ].join(""),
-    "Secure link to reset your ChaiAuth password.",
+    "A secure link to reset your ChaiAuth password.",
   );
 
 export const welcomeEmail = (name: string, url: string) =>
   baseTemplate(
-    "Welcome to ChaiAuth!",
+    "Welcome to ChaiAuth",
     [
-      icon("checked--v1", "f97316"),
-      heading(`Welcome aboard, ${escapeHtml(name)}!`),
-      paragraph(
-        "Your email has been successfully verified. You now have full access to your ChaiAuth account and all our platform features.",
-      ),
-      ctaButton(url, "Go to Dashboard"),
+      statusTile("success", "&#10003;"),
+      heading(`Welcome, ${escapeHtml(name)}!`),
+      paragraph("Your email is verified and your account is ready. Manage your profile, sessions and security from your dashboard."),
+      ctaButton(url, "Go to dashboard"),
     ].join(""),
-    "Your account is now fully active.",
+    "Your ChaiAuth account is ready.",
   );
 
 export const passwordChangedEmail = () =>
   baseTemplate(
-    "Security Alert: Password Changed",
+    "Your password was changed",
     [
-      icon("box-important--v1", "ef4444"),
-      heading("Password changed"),
-      paragraph("This is a confirmation that the password for your ChaiAuth account was recently updated."),
-      `<div style="background-color: #271011; border: 1px solid #4a1516; padding: 16px; border-radius: 8px; text-align: left;">
-        <p style="color: #fca5a5; font-size: 14px; margin: 0; font-weight: 500;">Security Alert: If you did not make this change, please contact our support team immediately to secure your account.</p>
-      </div>`,
+      statusTile("danger", "!"),
+      heading("Your password was changed"),
+      paragraph("This confirms that the password for your ChaiAuth account was just updated.", 20),
+      callout(
+        "danger",
+        `${strong("Wasn't you?")} Reset your password right away and review your active sessions to secure your account.`,
+      ),
     ].join(""),
-    "Notice regarding your recent password change.",
+    "A security notice about your ChaiAuth password.",
   );
 
 export const developerAppRegisteredEmail = (appName: string, clientId: string) =>
   baseTemplate(
-    "New App Registered",
+    "Your app is registered",
     [
-      icon("module", "f97316"),
-      heading("App Registered Successfully"),
-      paragraph("You have successfully registered a new OAuth App on the ChaiAuth Developer Platform.", 24),
-      `<div style="background-color: #09090b; border: 1px solid #27272a; padding: 20px; border-radius: 8px; text-align: left; margin-bottom: 24px;">
-        <p style="color: #a1a1aa; font-size: 14px; margin: 0 0 8px 0;"><strong>App Name:</strong> <span style="color: #ffffff;">${escapeHtml(appName)}</span></p>
-        <p style="color: #a1a1aa; font-size: 14px; margin: 0;"><strong>Client ID:</strong> <code style="color: #ea580c; font-family: monospace; background: #18181b; padding: 2px 6px; border-radius: 4px;">${escapeHtml(clientId)}</code></p>
-      </div>`,
-      `<div style="background-color: #1a1a1a; border: 1px solid #333333; padding: 16px; border-radius: 8px; text-align: left;">
-        <p style="color: #e4e4e7; font-size: 14px; margin: 0;">Reminder: Keep your Client Secret completely secure. Never expose it in frontend code or public repositories.</p>
-      </div>`,
+      statusTile("success", "&#10003;"),
+      heading("Your app is registered"),
+      paragraph("A new application was added to your ChaiAuth developer account.", 20),
+      infoCard(labeledValue("App name", appName) + `<p class="e-subtle" style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8C7E6E;">Client ID</p>${codeChip(clientId)}`),
+      callout("info", "Keep your client secret private. Never put it in frontend code or a public repository."),
     ].join(""),
-    "Confirmation of your new OAuth application.",
+    "Confirmation of your new ChaiAuth application.",
   );
 
 export const otpEmail = (otp: string, appName = "ChaiAuth") =>
   baseTemplate(
     "Your login code",
     [
-      icon("key", "f97316"),
       heading("Your login code"),
       paragraph(
-        `Use this one-time code to sign in to <strong style="color: #ffffff;">${escapeHtml(appName)}</strong>. This code expires in <strong style="color: #ffffff;">10 minutes</strong>.`,
+        `Enter this code to sign in to ${strong(escapeHtml(appName))}. It expires in ${strong("10 minutes")}.`,
+        20,
       ),
-      `<div style="background-color: #09090b; border: 1px solid #27272a; padding: 32px 24px; border-radius: 10px; text-align: center; margin-bottom: 32px;">
-        <p style="color: #52525b; font-size: 11px; text-transform: uppercase; letter-spacing: 3px; margin: 0 0 16px 0; font-weight: 600;">One-Time Password</p>
-        <div style="letter-spacing: 12px; font-size: 44px; font-weight: 800; color: #f97316; font-family: 'Courier New', Courier, monospace;">${escapeHtml(otp)}</div>
+      `<div class="e-panel" style="margin: 0 0 24px 0; padding: 24px 16px; background-color: #FBF7F0; border: 1px solid #EADFCF; border-radius: 12px; text-align: center;">
+        <div class="e-brandword" style="font-family: 'SFMono-Regular',Menlo,Consolas,'Courier New',monospace; font-size: 38px; font-weight: 700; letter-spacing: 10px; padding-left: 10px; color: #EA6A1F;">${escapeHtml(otp)}</div>
       </div>`,
-      `<div style="background-color: #1a0d00; border: 1px solid #431407; padding: 16px; border-radius: 8px; text-align: left;">
-        <p style="color: #fdba74; font-size: 13px; margin: 0; line-height: 1.6;"><strong>Security notice:</strong> Never share this code with anyone. ${escapeHtml(appName)} staff will never ask for this OTP. If you did not request this code, you can safely ignore this email.</p>
-      </div>`,
+      callout(
+        "warn",
+        `${strong("Don't share this code.")} ChaiAuth will never ask you for it. If you didn't request it, you can ignore this email.`,
+      ),
     ].join(""),
-    `Your one-time login code: ${otp}`,
+    `Your login code: ${otp}`,
   );
 
 export interface SuspiciousLoginDetails {
@@ -133,37 +121,34 @@ export interface SuspiciousLoginDetails {
 
 export const suspiciousLoginEmail = ({ device, location, time }: SuspiciousLoginDetails) =>
   baseTemplate(
-    "New Login Alert",
+    "New sign-in to your account",
     [
-      heading("New Login Detected"),
-      paragraph(
-        "We noticed a login to your ChaiAuth account from a new device or location. If this was you, you can safely ignore this email.",
-        24,
-      ),
+      statusTile("warn", "!"),
+      heading("New sign-in detected"),
+      paragraph("Your ChaiAuth account was signed in to from a new device or location. If this was you, no action is needed.", 20),
       infoCard(
         labeledValue("Device", device) + labeledValue("Location (IP)", location) + labeledValue("Time", time, true),
       ),
-      paragraph(
-        "If you did not authorize this login, please reset your password immediately and review your active sessions in the dashboard.",
-        0,
+      callout(
+        "danger",
+        `${strong("Not you?")} Reset your password immediately and sign out any sessions you don't recognise.`,
       ),
     ].join(""),
-    "We detected a login from a new device.",
+    "We noticed a sign-in from a new device.",
   );
 
 export const dataExportEmail = (url: string) =>
   baseTemplate(
-    "Data Export Ready",
+    "Your data export is ready",
     [
-      heading("Your Data Export is Ready"),
+      statusTile("info", "&#8595;"),
+      heading("Your data export is ready"),
       paragraph(
-        "You requested a copy of your ChaiAuth data. The file containing your profile, security settings, and session history is ready for download.",
-        24,
+        `The archive with your profile, security settings and session history is ready. The link is valid for ${strong("24 hours")}.`,
       ),
-      infoCard(
-        `<p style="margin: 0 0 16px; font-size: 14px; color: #e4e4e7;">This secure link is valid for exactly <strong>24 hours</strong>. After that, you will need to request a new export.</p>${ctaButton(url, "Download Data Archive")}`,
-      ),
-      paragraph("If you did not request this, please ignore this email and review your account security settings.", 0),
+      ctaButton(url, "Download archive"),
+      fallbackLink(url),
+      smallPrint("Didn't request this? Ignore this email and review your account security settings."),
     ].join(""),
-    "Your requested data archive is ready for download.",
+    "Your requested data archive is ready.",
   );

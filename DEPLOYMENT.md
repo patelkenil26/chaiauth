@@ -47,7 +47,7 @@ cd ~/chaiauth
 nano .env.production      # copy from .env.production.example and fill every value
 chmod 600 .env.production
 ```
-Required: `WEB_DOMAIN`, `API_DOMAIN`, `POSTGRES_PASSWORD`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `DATA_ENCRYPTION_KEY`, and the three legacy `GOOGLE_OAUTH_*` placeholders (the API will not boot without them). Fill Resend, Google, GitHub, Turnstile values for those features.
+Required: `WEB_DOMAIN`, `API_DOMAIN`, `DOCKERHUB_USERNAME`, `POSTGRES_PASSWORD`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `DATA_ENCRYPTION_KEY`, and the three legacy `GOOGLE_OAUTH_*` placeholders (the API will not boot without them). Fill Resend, Google, GitHub, Turnstile values for those features.
 Generate secrets: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` (use `randomBytes(32)` for `DATA_ENCRYPTION_KEY`).
 
 The OIDC signing keys (`~/chaiauth/cert/`) are generated automatically by the first deploy.

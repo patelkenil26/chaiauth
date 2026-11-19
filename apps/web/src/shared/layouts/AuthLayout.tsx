@@ -100,7 +100,7 @@ export function AuthLayout({
           </div>
         </div>
         <div className="flex flex-1 items-center justify-center py-4">
-          <div className="ca-glass ca-fade-up w-full max-w-[420px] rounded-3xl p-6 sm:px-8 sm:py-7">
+          <div className="ca-glass ca-fade-up w-full min-w-0 max-w-[420px] rounded-3xl p-6 sm:px-8 sm:py-7">
             <div className="ca-stagger">
               {title && <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight" style={{ fontFamily: '"Sora", sans-serif' }}>{title}</h1>}
               {subtitle && <p className="mt-2 text-sm text-text-soft">{subtitle}</p>}

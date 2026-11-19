@@ -129,8 +129,8 @@ export default function HomePage() {
 
       {/* OPEN STANDARDS + CODE */}
       <Section>
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <Reveal>
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-12">
+          <Reveal className="min-w-0">
             <span className="ca-eyebrow">For developers</span>
             <h2 className="mt-5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Built on open standards</h2>
             <p className="mt-3 text-text-soft">
@@ -155,7 +155,7 @@ export default function HomePage() {
             </Link>
           </Reveal>
 
-          <Reveal delay={140}>
+          <Reveal delay={140} className="min-w-0">
             <div className="ca-glass ca-glow-border rounded-2xl">
               <div className="flex items-center gap-2 border-b border-border px-4 py-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]/80" />

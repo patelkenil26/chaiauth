@@ -22,7 +22,7 @@ export function AppCard({ app, onEdit, onDelete }: AppCardProps) {
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-display text-lg font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>
+              <h2 className="font-display break-words text-lg font-semibold text-foreground" style={{ fontFamily: '"Sora", sans-serif' }}>
                 {app.name}
               </h2>
               <span className="rounded-sm border border-border px-1.5 py-0.5 text-[0.65rem] text-good tracking-wider bg-background/50">
@@ -34,7 +34,7 @@ export function AppCard({ app, onEdit, onDelete }: AppCardProps) {
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 self-start">
+        <div className="flex flex-row gap-2 self-start">
           <button 
             className="ca-btn border border-primary/50 text-primary hover:bg-primary/10 hover:border-primary text-sm px-3 py-1.5 h-auto transition-colors" 
             onClick={() => onEdit(app)}
@@ -50,8 +50,8 @@ export function AppCard({ app, onEdit, onDelete }: AppCardProps) {
         </div>
       </div>
       
-      <dl className="mt-5 grid gap-4 border-t border-border/50 pt-5 sm:grid-cols-2">
-        <div>
+      <dl className="mt-5 grid grid-cols-1 gap-4 border-t border-border/50 pt-5 sm:grid-cols-2">
+        <div className="min-w-0">
           <dt className="text-xs text-muted-foreground mb-1">Client ID</dt>
           <dd className="flex min-w-0 items-center gap-2">
             <code className="ca-mono min-w-0 truncate text-sm text-text-soft bg-accent/50 px-2 py-0.5 rounded border border-border/50">
@@ -62,7 +62,7 @@ export function AppCard({ app, onEdit, onDelete }: AppCardProps) {
             </button>
           </dd>
         </div>
-        <div>
+        <div className="min-w-0">
           <dt className="text-xs text-muted-foreground mb-1">Redirect URI</dt>
           <dd className="flex min-w-0 items-center gap-2">
             <code className="ca-mono min-w-0 truncate text-sm text-text-soft bg-accent/50 px-2 py-0.5 rounded border border-border/50">

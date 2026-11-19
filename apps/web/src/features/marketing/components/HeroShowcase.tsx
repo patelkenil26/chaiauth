@@ -20,9 +20,9 @@ export function HeroShowcase() {
           <span className="w-12" />
         </div>
 
-        <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
+        <div className="grid grid-cols-1 gap-0 md:grid-cols-[1.1fr_1fr]">
           {/* left: consent */}
-          <div className="border-b border-border p-6 sm:p-8 md:border-b-0 md:border-r">
+          <div className="min-w-0 border-b border-border p-5 sm:p-8 md:border-b-0 md:border-r">
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
                 <KeyRound className="h-5 w-5" />
@@ -37,7 +37,7 @@ export function HeroShowcase() {
               {["Read your name and email", "Verify your identity (OpenID)", "Stay signed in for 30 days"].map((t, i) => (
                 <li
                   key={t}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3.5 py-2.5 text-text-soft"
+                  className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-background/40 px-3.5 py-2.5 text-text-soft"
                   style={{ animation: `ca-slide-in .6s cubic-bezier(.2,.7,.2,1) ${0.5 + i * 0.18}s both` }}
                 >
                   <span className="grid h-5 w-5 place-items-center rounded-full bg-good/15 text-good">
@@ -55,12 +55,12 @@ export function HeroShowcase() {
           </div>
 
           {/* right: live security */}
-          <div className="relative p-6 sm:p-8">
+          <div className="relative min-w-0 p-5 sm:p-8">
             <p className="ca-mono text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">Two-step verification</p>
 
-            <div className="mt-5 flex items-center gap-5">
-              <div className="relative h-20 w-20 shrink-0">
-                <svg viewBox="0 0 36 36" className="h-20 w-20 -rotate-90">
+            <div className="mt-5 flex items-center gap-3 sm:gap-5">
+              <div className="relative h-16 w-16 shrink-0 sm:h-20 sm:w-20">
+                <svg viewBox="0 0 36 36" className="h-16 w-16 -rotate-90 sm:h-20 sm:w-20">
                   <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" strokeWidth="2.4" />
                   <circle
                     cx="18" cy="18" r="15.9" fill="none" stroke="var(--chai-bright)" strokeWidth="2.4" strokeLinecap="round"
@@ -68,13 +68,13 @@ export function HeroShowcase() {
                     style={{ animation: "ca-ring 30s linear infinite" }}
                   />
                 </svg>
-                <Smartphone className="absolute inset-0 m-auto h-6 w-6 text-primary" />
+                <Smartphone className="absolute inset-0 m-auto h-5 w-5 text-primary sm:h-6 sm:w-6" />
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex min-w-0 flex-1 justify-between gap-1 sm:flex-none sm:justify-start sm:gap-1.5">
                 {["4", "8", "2", "9", "1", "7"].map((d, i) => (
                   <span
                     key={i}
-                    className="ca-mono grid h-11 w-8 place-items-center rounded-lg border border-border bg-background/60 text-lg font-semibold text-foreground"
+                    className="ca-mono grid h-10 min-w-0 max-w-9 flex-1 place-items-center rounded-lg sm:h-11 sm:w-8 sm:flex-none border border-border bg-background/60 text-lg font-semibold text-foreground"
                     style={{ animation: `ca-pop .5s cubic-bezier(.2,.7,.2,1) ${0.9 + i * 0.1}s both` }}
                   >
                     {d}

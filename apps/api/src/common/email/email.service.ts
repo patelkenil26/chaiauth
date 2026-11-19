@@ -24,35 +24,35 @@ export const emailService = {
   sendVerificationEmail: (to: string, token: string) =>
     emailProvider.send({
       to,
-      subject: "Verify your Identity Provider Account",
+      subject: "Verify your ChaiAuth email",
       html: verificationEmail(frontendUrl("/verify-email", token)),
     }),
 
   sendResetPasswordEmail: (to: string, token: string) =>
     emailProvider.send({
       to,
-      subject: "Reset your Password",
+      subject: "Reset your ChaiAuth password",
       html: resetPasswordEmail(frontendUrl("/reset-password", token)),
     }),
 
   sendWelcomeEmail: (to: string, name: string) =>
     emailProvider.send({
       to,
-      subject: "Welcome to ChaiAuth!",
+      subject: "Welcome to ChaiAuth",
       html: welcomeEmail(name, frontendUrl("/dashboard")),
     }),
 
   sendPasswordChangedEmail: (to: string) =>
     emailProvider.send({
       to,
-      subject: "Your password was changed",
+      subject: "Your ChaiAuth password was changed",
       html: passwordChangedEmail(),
     }),
 
   sendDeveloperAppRegisteredEmail: (to: string, appName: string, clientId: string) =>
     emailProvider.send({
       to,
-      subject: "OAuth App Registered",
+      subject: "Your ChaiAuth app is registered",
       html: developerAppRegisteredEmail(appName, clientId),
     }),
 
@@ -66,21 +66,21 @@ export const emailService = {
   sendOtpEmail: (to: string, otp: string, appName?: string) =>
     emailProvider.send({
       to,
-      subject: `${otp} is your login code`,
+      subject: `${otp} is your ChaiAuth login code`,
       html: otpEmail(otp, appName),
     }),
 
   sendSuspiciousLoginEmail: (to: string, details: SuspiciousLoginDetails) =>
     emailProvider.send({
       to,
-      subject: "Security Alert: New Login Detected",
+      subject: "New sign-in to your ChaiAuth account",
       html: suspiciousLoginEmail(details),
     }),
 
   sendDataExportEmail: (to: string, token: string) =>
     emailProvider.send({
       to,
-      subject: "Your Data Export is Ready",
+      subject: "Your ChaiAuth data export is ready",
       html: dataExportEmail(`${config.app.apiUrl}/auth/export-data/download/${encodeURIComponent(token)}`),
     }),
 };

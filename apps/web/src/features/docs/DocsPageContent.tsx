@@ -203,8 +203,8 @@ export default NextAuth(authOptions);`;
     <div className="ca-root min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6">
-          <div className="flex items-center gap-3">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
               onClick={() => setOpen(!open)}
               className="rounded-md p-1 text-foreground transition-colors hover:bg-secondary lg:hidden"
@@ -220,8 +220,8 @@ export default NextAuth(authOptions);`;
             <Link href="/" className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:block">
               Home
             </Link>
-            <Link href="/developer" className="ca-btn ca-btn-ghost !h-10 hidden sm:inline-flex">Developer console</Link>
-            <Link href="/register" className="ca-btn ca-btn-primary !h-10">Get started</Link>
+            <Link href="/developer" className="ca-btn ca-btn-ghost !h-10 max-sm:!hidden">Developer console</Link>
+            <Link href="/register" className="ca-btn ca-btn-primary !h-9 !px-4 sm:!h-10 sm:!px-5">Get started</Link>
           </div>
         </div>
         <div className="absolute inset-x-0 bottom-0 h-px bg-transparent">
