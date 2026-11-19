@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Logo } from "@/shared/components/Logo";
 import { env } from "@/config/env";
-import { Menu, X, KeyRound, Code2, ShieldCheck, Check, ArrowRight, BookOpen, Info, ChevronRight } from "lucide-react";
-import { CodeBlock } from "./CodeBlock";
+import { Menu, X, KeyRound, Code2, ShieldCheck, Check, ArrowRight, BookOpen, Info, ChevronRight, Link2, Search } from "lucide-react";
+import { CodeBlock, CodeTabs } from "./CodeBlock";
 import { buildSnippets } from "./snippets";
+import { ANCHOR_PAGE, DOCS_UPDATED, DOCS_VERSION, type SearchEntry } from "./docsIndex";
+import { SearchDialog } from "./SearchDialog";
+import { ErrorList, FaqList, RateLimitTable } from "./ReferenceSections";
+import { GENERAL_ERRORS, OAUTH_ERRORS } from "./referenceData";
 import { Reveal } from "@/features/marketing/components/Reveal";
 
 const NAV = [
@@ -35,8 +40,14 @@ const NAV = [
       { id: "server-api", label: "Server API & keys" },
       { id: "scopes", label: "Scopes & claims" },
       { id: "login-context", label: "Login context" },
+      { id: "error-reference", label: "Error reference" },
+      { id: "rate-limits", label: "Rate limits" },
       { id: "security-notes", label: "Security notes" },
     ],
+  },
+  {
+    group: "Help",
+    items: [{ id: "troubleshooting", label: "Troubleshooting & FAQ" }],
   },
 ];
 const FLAT = NAV.flatMap((g) => g.items.map((i) => ({ ...i, group: g.group })));
@@ -48,16 +59,49 @@ function Page({ id, active, children }: { id: string; active: string; children: 
   return <div key={id} className="ca-fade-up">{children}</div>;
 }
 
+// Hover-revealed button that copies a link straight to a heading
+function CopyLink({ id }: { id: string }) {
+  async function copy() {
+    const url = `${window.location.origin}${window.location.pathname}#${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Could not copy the link.");
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      aria-label="Copy link to this section"
+      className="ml-2 inline-grid h-7 w-7 place-items-center rounded-md align-middle text-muted-foreground opacity-0 transition-opacity hover:bg-accent/60 hover:text-foreground focus-visible:opacity-100 group-hover/h:opacity-100 max-sm:opacity-60"
+    >
+      <Link2 className="h-4 w-4" />
+    </button>
+  );
+}
+
 function H2({ id, children, sub }: { id: string; children: ReactNode; sub?: string }) {
   return (
-    <section id={id} className="scroll-mt-24">
+    <section id={id} data-toc className="scroll-mt-24">
       <Reveal>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl" style={{ fontFamily: '"Sora", sans-serif' }}>
+        <h2 className="group/h text-2xl font-semibold tracking-tight text-foreground sm:text-3xl" style={{ fontFamily: '"Sora", sans-serif' }}>
           {children}
+          <CopyLink id={id} />
         </h2>
         {sub && <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">{sub}</p>}
       </Reveal>
     </section>
+  );
+}
+
+function H3({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <h3 id={id} data-toc className="group/h mt-10 scroll-mt-24 text-lg font-semibold text-foreground">
+      {children}
+      <CopyLink id={id} />
+    </h3>
   );
 }
 
@@ -83,6 +127,10 @@ export function DocsPageContent() {
   const prev = index > 0 ? FLAT[index - 1] : null;
   const next = index < FLAT.length - 1 ? FLAT[index + 1] : null;
   const [progress, setProgress] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [toc, setToc] = useState<{ id: string; label: string; level: 2 | 3 }[]>([]);
+  const [activeToc, setActiveToc] = useState("");
+  const pendingAnchor = useRef<string | null>(null);
 
   const backendHost = env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, "");
   const frontendHost = env.NEXT_PUBLIC_FRONTEND_URL;
@@ -143,18 +191,133 @@ export const authOptions = {
 
 export default NextAuth(authOptions);`;
 
-  const { sdkProviderCode, sdkUsageCode, embeddedFormsCode, embeddedBackendCode, brandedEmailsCode, loginContextCode, apiKeyCode, apiKeyResponse } =
-    buildSnippets(backendHost, frontendHost);
+  const {
+    sdkProviderCode,
+    sdkUsageCode,
+    embeddedFormsCode,
+    embeddedBackendCode,
+    brandedEmailsCode,
+    loginContextCode,
+    apiKeyCode,
+    apiKeyResponse,
+    tokenNodeCode,
+    tokenPythonCode,
+    apiKeyNodeCode,
+    apiKeyPythonCode,
+  } = buildSnippets(backendHost, frontendHost);
+
+  const oauthErrorCode = `HTTP/1.1 400 Bad Request
+
+{
+  "success": false,
+  "message": "Invalid or expired authorization code",
+  "code": "BAD_REQUEST",
+  "error": "invalid_grant",
+  "error_description": "Invalid or expired authorization code"
+}`;
+
+  const generalErrorCode = `HTTP/1.1 400 Bad Request
+
+{
+  "success": false,
+  "message": "Too small: expected string to have >=1 characters",
+  "code": "VALIDATION_ERROR",
+  "details": [
+    { "part": "query", "path": "state", "message": "Too small: expected string to have >=1 characters" }
+  ]
+}`;
+
+  const rateLimitCode = `HTTP/1.1 429 Too Many Requests
+Retry-After: 42
+
+{
+  "success": false,
+  "message": "Too many authentication attempts, please try again after 1 minute",
+  "code": "TOO_MANY_REQUESTS"
+}`;
+
+  const tokenTabs = [
+    { id: "curl", label: "cURL", code: tokenCode },
+    { id: "node", label: "Node", code: tokenNodeCode },
+    { id: "python", label: "Python", code: tokenPythonCode },
+  ];
+  const apiKeyTabs = [
+    { id: "curl", label: "cURL", code: apiKeyCode },
+    { id: "node", label: "Node", code: apiKeyNodeCode },
+    { id: "python", label: "Python", code: apiKeyPythonCode },
+  ];
 
   // Keep the selected page in sync with the URL hash (deep links, back/forward)
+  // Scroll to a sub-heading queued by a search result, a TOC click or a deep link
+  const flushAnchor = useCallback(() => {
+    const id = pendingAnchor.current;
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) {
+      pendingAnchor.current = null;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
+
   useEffect(() => {
     const fromHash = () => {
       const id = window.location.hash.slice(1);
-      if (ALL_IDS.includes(id)) setPage(id);
+      if (ALL_IDS.includes(id)) {
+        setPage(id);
+      } else if (ANCHOR_PAGE[id]) {
+        pendingAnchor.current = id;
+        setPage(ANCHOR_PAGE[id]);
+        flushAnchor(); // already on that page; otherwise the page effect below does it
+      }
     };
     fromHash();
     window.addEventListener("hashchange", fromHash);
     return () => window.removeEventListener("hashchange", fromHash);
+  }, [flushAnchor]);
+
+  // Collect this page's headings for "On this page" and highlight the one being read
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>("main [data-toc]"));
+    const items = els.map((el) => {
+      const isH3 = el.tagName === "H3";
+      const heading = isH3 ? el : el.querySelector("h2");
+      return { id: el.id, label: heading?.textContent?.trim() ?? "", level: (isH3 ? 3 : 2) as 2 | 3 };
+    });
+    // Deferred one frame so the state updates are not synchronous inside the effect
+    const raf = requestAnimationFrame(() => {
+      setToc(items);
+      setActiveToc(items[0]?.id ?? "");
+      flushAnchor();
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setActiveToc(e.target.id)),
+      { rootMargin: "-15% 0px -70% 0px" },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, [page, flushAnchor]);
+
+  // Ctrl/Cmd+K or "/" opens search
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+        return;
+      }
+      const t = e.target as HTMLElement | null;
+      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (e.key === "/" && !typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   // Reading progress (resets when the page changes)
@@ -169,13 +332,26 @@ export default NextAuth(authOptions);`;
     return () => window.removeEventListener("scroll", onScroll);
   }, [page]);
 
-  const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
+  // Open a docs page, optionally scrolling to a sub-heading inside it
+  const jump = (id: string, anchor?: string) => {
     setOpen(false);
+    setSearchOpen(false);
     setPage(id);
-    window.history.pushState(null, "", `#${id}`);
-    window.scrollTo({ top: 0 });
+    window.history.pushState(null, "", `#${anchor ?? id}`);
+    if (anchor) {
+      pendingAnchor.current = anchor;
+      if (id === page) flushAnchor();
+    } else {
+      window.scrollTo({ top: 0 });
+    }
   };
+
+  const go = (e: React.MouseEvent<HTMLAnchorElement>, id: string, anchor?: string) => {
+    e.preventDefault();
+    jump(id, anchor);
+  };
+
+  const onSearchSelect = (entry: SearchEntry) => jump(entry.page, entry.anchor);
 
   // A render helper, not a component: components must not be created during render
   const renderNav = (compact = false) => (
@@ -231,6 +407,16 @@ export default NextAuth(authOptions);`;
             <span className="ml-2 hidden border-l border-border pl-5 text-sm text-muted-foreground sm:block">Documentation</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search the docs"
+              className="flex h-10 items-center gap-2 rounded-lg border border-border bg-background/50 px-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden md:block">Search docs</span>
+              <kbd className="ca-mono hidden rounded border border-border px-1.5 py-0.5 text-[0.65rem] md:block">Ctrl K</kbd>
+            </button>
             <Link href="/" className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground sm:block">
               Home
             </Link>
@@ -245,6 +431,8 @@ export default NextAuth(authOptions);`;
           />
         </div>
       </header>
+
+      {searchOpen && <SearchDialog onClose={() => setSearchOpen(false)} onSelect={onSearchSelect} />}
 
       {/* Mobile nav */}
       <div className={`grid overflow-hidden border-b border-border bg-background/95 transition-[grid-template-rows] duration-300 lg:hidden ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr] border-b-0"}`}>
@@ -265,6 +453,7 @@ export default NextAuth(authOptions);`;
           {page !== "quick-start" && (
             <p className="ca-mono pb-8 pt-12 text-[0.7rem] uppercase text-muted-foreground lg:pt-16" style={{ letterSpacing: ".16em" }}>
               {FLAT[index]?.group} / {FLAT[index]?.label}
+              <span className="ml-3 normal-case tracking-normal opacity-70">· {DOCS_VERSION} · Updated {DOCS_UPDATED}</span>
             </p>
           )}
           {/* Hero */}
@@ -272,7 +461,7 @@ export default NextAuth(authOptions);`;
             <div className="ca-aurora opacity-70"><span /><span /><span /></div>
             <div className="ca-grid pointer-events-none absolute inset-0" />
             <div className="relative ca-fade-up">
-              <span className="ca-eyebrow"><BookOpen className="h-3.5 w-3.5" /> ChaiAuth docs · v1</span>
+              <span className="ca-eyebrow"><BookOpen className="h-3.5 w-3.5" /> ChaiAuth docs · {DOCS_VERSION} · Updated {DOCS_UPDATED}</span>
               <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl" style={{ fontFamily: '"Sora", sans-serif' }}>
                 Add sign-in to your app <span className="ca-text-chai-anim">in minutes.</span>
               </h1>
@@ -352,8 +541,12 @@ export default NextAuth(authOptions);`;
           >
             Auth.js / NextAuth
           </H2>
-          <Reveal className="mt-6 space-y-5">
+          <H3 id="authjs-install">Install Auth.js</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="terminal" code="npm install next-auth" plain />
+          </Reveal>
+          <H3 id="authjs-configure">Configure the provider</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="app/api/auth/[...nextauth]/route.ts" code={nextAuthCode} />
           </Reveal>
           <Callout>
@@ -378,8 +571,12 @@ export default NextAuth(authOptions);`;
           <H2 id="token-exchange" sub="Do this on your server so the client secret never reaches the browser. Public clients (SPA / mobile) skip client_secret and rely on PKCE.">
             Token exchange
           </H2>
-          <Reveal className="mt-6 space-y-5">
-            <CodeBlock label="POST /o/token" code={tokenCode} />
+          <H3 id="token-request">Token request</H3>
+          <Reveal className="mt-4">
+            <CodeTabs label="POST /o/token" tabs={tokenTabs} />
+          </Reveal>
+          <H3 id="token-response">Token response</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="response" code={tokenResponse} />
           </Reveal>
           <Callout>
@@ -394,8 +591,12 @@ export default NextAuth(authOptions);`;
           >
             React SDK
           </H2>
-          <Reveal className="mt-6 space-y-5">
+          <H3 id="sdk-provider">Wrap your app in the provider</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="providers.tsx" code={sdkProviderCode} />
+          </Reveal>
+          <H3 id="sdk-usage">Use the SDK in a component</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="header.tsx" code={sdkUsageCode} />
           </Reveal>
           <Callout>
@@ -413,7 +614,8 @@ export default NextAuth(authOptions);`;
           >
             Embedded sign-in forms
           </H2>
-          <Reveal className="mt-6 space-y-5">
+          <H3 id="embedded-form">Drop in the sign-in form</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="login.tsx" code={embeddedFormsCode} />
           </Reveal>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -434,7 +636,7 @@ export default NextAuth(authOptions);`;
             hosts the form (for example <code className="ca-mono text-primary">https://yourapp.com</code>). ChaiAuth only accepts
             embedded sign-ins from that origin. Also add the same domain to your Turnstile widget for sign-up.
           </Callout>
-          <h3 className="mt-8 text-lg font-semibold text-foreground">Keep the client secret on your server (recommended)</h3>
+          <H3 id="embedded-backend-mode">Keep the client secret on your server</H3>
           <Reveal className="mt-4 space-y-5">
             <CodeBlock label="backend mode" code={embeddedBackendCode} />
           </Reveal>
@@ -558,13 +760,101 @@ export default NextAuth(authOptions);`;
           >
             Server API &amp; keys
           </H2>
-          <Reveal className="mt-6 space-y-5">
-            <CodeBlock label="terminal" code={apiKeyCode} />
+          <H3 id="api-request">Make an API request</H3>
+          <Reveal className="mt-4">
+            <CodeTabs label="GET /v1/users" tabs={apiKeyTabs} />
+          </Reveal>
+          <H3 id="api-response">API response</H3>
+          <Reveal className="mt-4">
             <CodeBlock label="GET /v1/users/:userId" code={apiKeyResponse} />
           </Reveal>
           <Callout>
             Keys are shown once, stored only as a hash, can expire, and can be revoked at any time. You can read only users who
             approved <em>your</em> app, and only the claims their consent covers. Each key is limited to 120 requests per minute.
+          </Callout>
+          </Page>
+
+          <Page id="error-reference" active={page}>
+          <H2
+            id="error-reference"
+            sub="What each error means, the exact message your app receives, and how to fix it. Match on the error code or HTTP status, never on the message text."
+          >
+            Error reference
+          </H2>
+          <H3 id="error-format">Response format</H3>
+          <Reveal className="mt-4 space-y-5">
+            <CodeBlock label="OAuth error (token endpoint, userinfo, consent)" code={oauthErrorCode} />
+            <CodeBlock label="General error (everything else)" code={generalErrorCode} />
+          </Reveal>
+          <Callout>
+            OAuth errors always carry <code className="ca-mono text-primary">error</code> and{" "}
+            <code className="ca-mono text-primary">error_description</code>, so standard OAuth libraries understand them. Their{" "}
+            <code className="ca-mono text-primary">code</code> field is always <code className="ca-mono text-primary">BAD_REQUEST</code>,
+            even on a 401, so read <code className="ca-mono text-primary">error</code> instead. Malformed requests are reported as{" "}
+            <code className="ca-mono text-primary">VALIDATION_ERROR</code> (not <code className="ca-mono text-primary">invalid_request</code>
+            ), including an unsupported <code className="ca-mono text-primary">grant_type</code>.
+          </Callout>
+          <H3 id="oauth-errors">OAuth errors</H3>
+          <Reveal className="mt-4">
+            <ErrorList rows={OAUTH_ERRORS} />
+          </Reveal>
+          <H3 id="general-errors">Other errors</H3>
+          <Reveal className="mt-4">
+            <ErrorList rows={GENERAL_ERRORS} />
+          </Reveal>
+          </Page>
+
+          <Page id="rate-limits" active={page}>
+          <H2
+            id="rate-limits"
+            sub="Limits protect sign-in from abuse. They are counted in Redis, so they hold across servers, and they stack: a request must pass every limit that applies to it."
+          >
+            Rate limits
+          </H2>
+          <Reveal className="mt-6">
+            <RateLimitTable />
+          </Reveal>
+          <H3 id="rate-limit-429">When you hit a limit</H3>
+          <Reveal className="mt-4 space-y-5">
+            <CodeBlock label="429 Too Many Requests" code={rateLimitCode} />
+          </Reveal>
+          <Callout>
+            Limits are per IP address, so a request made by your <em>server</em> (for example the token exchange) counts against your
+            server&apos;s IP, while requests from a browser count against that user&apos;s IP. The response carries the standard{" "}
+            <code className="ca-mono text-primary">RateLimit-*</code> headers and, once limited,{" "}
+            <code className="ca-mono text-primary">Retry-After</code>. Wait that long, then retry with exponential backoff.
+          </Callout>
+          <H3 id="rate-limit-tips">Staying under the limits</H3>
+          <Reveal className="mt-4">
+            <ul className="ca-glass space-y-4 rounded-2xl p-6 text-sm leading-6 text-text-soft">
+              {[
+                "Reuse an access token for its full hour and refresh it instead of sending the user through sign-in again.",
+                "Exchange each authorization code exactly once. Retrying a used code only burns your quota.",
+                "Do not poll /v1/users. Read a user when you need them and cache the result.",
+                "Use one API key per service so a busy service cannot exhaust another one's 120 requests per minute.",
+              ].map((item) => (
+                <li key={item} className="flex gap-3">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-good/15 text-good">
+                    <Check className="h-3 w-3" />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          </Page>
+
+          <Page id="troubleshooting" active={page}>
+          <H2 id="troubleshooting" sub="The questions developers ask most, with the quickest fix. If yours is not here, check the Error reference.">
+            Troubleshooting &amp; FAQ
+          </H2>
+          <Reveal className="mt-8">
+            <FaqList />
+          </Reveal>
+          <Callout>
+            Still stuck? <Link href="/contact" className="font-semibold text-primary underline-offset-4 hover:underline">Contact us</Link>{" "}
+            with the endpoint, the time of the request and the <code className="ca-mono text-primary">error</code> or{" "}
+            <code className="ca-mono text-primary">code</code> you received. Never send a client secret, API key or token.
           </Callout>
           </Page>
 
@@ -619,6 +909,28 @@ export default NextAuth(authOptions);`;
         {/* Right rail */}
         <aside className="hidden border-l border-border/70 px-6 py-14 xl:block">
           <div className="sticky top-28 space-y-6">
+            {toc.length > 1 && (
+              <div>
+                <p className="ca-mono text-[0.65rem] uppercase text-muted-foreground" style={{ letterSpacing: ".16em" }}>On this page</p>
+                <ul className="mt-3 space-y-1 border-l border-border">
+                  {toc.map((item) => (
+                    <li key={item.id}>
+                      <a
+                        href={`#${item.id}`}
+                        onClick={(e) => go(e, page, item.id === page ? undefined : item.id)}
+                        className={`-ml-px block border-l py-1 text-xs transition-colors ${item.level === 3 ? "pl-7" : "pl-4"} ${
+                          activeToc === item.id
+                            ? "border-primary font-medium text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="ca-glass rounded-2xl p-4">
               <BookOpen className="h-5 w-5 text-primary" />
               <p className="mt-3 text-sm font-medium text-foreground">Need a hand?</p>

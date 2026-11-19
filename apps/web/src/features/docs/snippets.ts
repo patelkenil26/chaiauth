@@ -134,7 +134,65 @@ scope=openid profile email login_context
   }
 }`;
 
+  const tokenNodeCode = `// Exchange the code for tokens (server side, Node 18+)
+const res = await fetch("${backendHost}/o/token", {
+  method: "POST",
+  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  body: new URLSearchParams({
+    grant_type: "authorization_code",
+    client_id: process.env.CHAIAUTH_CLIENT_ID!,
+    client_secret: process.env.CHAIAUTH_CLIENT_SECRET!,
+    code: authorizationCode,
+    redirect_uri: "https://yourapp.com/auth/callback",
+    code_verifier: pkceVerifier,
+  }),
+});
+const tokens = await res.json();`;
+
+  const tokenPythonCode = `# Exchange the code for tokens (server side)
+import os
+import requests
+
+res = requests.post(
+    "${backendHost}/o/token",
+    data={
+        "grant_type": "authorization_code",
+        "client_id": os.environ["CHAIAUTH_CLIENT_ID"],
+        "client_secret": os.environ["CHAIAUTH_CLIENT_SECRET"],
+        "code": authorization_code,
+        "redirect_uri": "https://yourapp.com/auth/callback",
+        "code_verifier": pkce_verifier,
+    },
+)
+tokens = res.json()`;
+
+  const apiKeyNodeCode = `// List the users who granted your app access (Node 18+)
+const res = await fetch("${backendHost}/v1/users?limit=20", {
+  headers: { Authorization: \`Bearer \${process.env.CHAIAUTH_API_KEY}\` },
+});
+const users = await res.json();
+
+// One user
+const one = await fetch("${backendHost}/v1/users/USER_ID", {
+  headers: { Authorization: \`Bearer \${process.env.CHAIAUTH_API_KEY}\` },
+}).then((r) => r.json());`;
+
+  const apiKeyPythonCode = `# List the users who granted your app access
+import os
+import requests
+
+headers = {"Authorization": f"Bearer {os.environ['CHAIAUTH_API_KEY']}"}
+
+users = requests.get("${backendHost}/v1/users", params={"limit": 20}, headers=headers).json()
+
+# One user
+one = requests.get("${backendHost}/v1/users/USER_ID", headers=headers).json()`;
+
   return {
+    tokenNodeCode,
+    tokenPythonCode,
+    apiKeyNodeCode,
+    apiKeyPythonCode,
     sdkProviderCode,
     sdkUsageCode,
     embeddedFormsCode,

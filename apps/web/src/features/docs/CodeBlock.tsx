@@ -1,12 +1,12 @@
 "use client";
 
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { Check, Clipboard } from "lucide-react";
 import { toast } from "sonner";
 
 // One pass tokenizer: comments | strings | keywords | object keys | numbers.
 const TOKEN =
-  /(\/\/.*|#.*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(import|from|export|const|return|default|await|async|new|curl|POST|GET)\b|\b([A-Za-z_][\w]*)(?=\s*:)|(\b\d+\b)/g;
+  /(\/\/.*|#.*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|\b(import|from|export|const|return|default|await|async|new|curl|POST|GET|require|print|def|with|as)\b|\b([A-Za-z_][\w]*)(?=\s*:)|(\b\d+\b)/g;
 
 function highlight(code: string): ReactNode[] {
   const out: ReactNode[] = [];
@@ -38,7 +38,77 @@ function highlight(code: string): ReactNode[] {
   return out;
 }
 
-export function CodeBlock({ code, label, plain = false }: { code: string; label: string; plain?: boolean }) {
+export type CodeTab = { id: string; label: string; code: string };
+
+const LANG_KEY = "chaiauth-docs-lang";
+const LANG_EVENT = "chaiauth-docs-lang";
+
+/** Same example in several languages. The chosen language is remembered and shared by every tab group on the page. */
+export function CodeTabs({ tabs, label }: { tabs: CodeTab[]; label: string }) {
+  const [picked, setPicked] = useState<string | null>(null);
+
+  useEffect(() => {
+    const read = () => {
+      try {
+        setPicked(window.localStorage.getItem(LANG_KEY));
+      } catch {
+        /* storage unavailable: keep the default */
+      }
+    };
+    read();
+    window.addEventListener(LANG_EVENT, read);
+    return () => window.removeEventListener(LANG_EVENT, read);
+  }, []);
+
+  const active = tabs.find((t) => t.id === picked) ?? tabs[0];
+
+  function choose(id: string) {
+    setPicked(id);
+    try {
+      window.localStorage.setItem(LANG_KEY, id);
+    } catch {
+      /* ignore */
+    }
+    window.dispatchEvent(new Event(LANG_EVENT));
+  }
+
+  return (
+    <CodeBlock
+      label={label}
+      code={active.code}
+      tabs={
+        <div role="tablist" aria-label="Language" className="flex shrink-0 gap-1 rounded-lg border border-border bg-background/50 p-0.5">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={t.id === active.id}
+              onClick={() => choose(t.id)}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                t.id === active.id ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      }
+    />
+  );
+}
+
+export function CodeBlock({
+  code,
+  label,
+  plain = false,
+  tabs,
+}: {
+  code: string;
+  label: string;
+  plain?: boolean;
+  tabs?: ReactNode;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -61,6 +131,7 @@ export function CodeBlock({ code, label, plain = false }: { code: string; label:
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#28c840]/80" />
           <span className="ca-mono ml-3 min-w-0 truncate text-xs text-muted-foreground">{label}</span>
         </div>
+        {tabs}
         <button
           type="button"
           onClick={copy}
