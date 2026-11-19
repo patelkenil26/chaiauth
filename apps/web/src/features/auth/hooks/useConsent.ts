@@ -25,6 +25,8 @@ export function useConsent(searchParams: URLSearchParams) {
     queryKey: ['consent-init', searchParams.toString()],
     queryFn: async () => {
       const params = {
+        // The authorize endpoint requires response_type; only "code" is supported
+        response_type: searchParams.get("response_type") ?? "code",
         client_id: searchParams.get("client_id"),
         redirect_uri: searchParams.get("redirect_uri"),
         scope: searchParams.get("scope"),
