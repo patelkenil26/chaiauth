@@ -39,3 +39,7 @@ yarn-error.log*
 
 # ChaiAuth signing keys (generate with scripts/generate-keys.sh)
 cert/
+
+# Production env (lives on the server only)
+.env.production
+/cert/

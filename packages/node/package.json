@@ -1,0 +1,51 @@
+{
+  "name": "@chaiauth/node",
+  "version": "0.1.0",
+  "description": "Server-side helpers for ChaiAuth: verify access tokens against your ChaiAuth JWKS and look up the signed-in user.",
+  "license": "MIT",
+  "keywords": ["chaiauth", "auth", "openid-connect", "oidc", "jwt", "jwks", "authentication"],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "prepublishOnly": "pnpm run check-types && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "jose": "^6.1.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

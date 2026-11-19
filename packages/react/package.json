@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "React SDK for ChaiAuth: <SignIn />, <UserButton /> and hooks, built on OpenID Connect with PKCE.",
   "license": "MIT",
+  "keywords": [
+    "chaiauth",
+    "auth",
+    "authentication",
+    "openid-connect",
+    "oidc",
+    "pkce",
+    "react",
+    "sign-in",
+    "login"
+  ],
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -22,12 +33,20 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "check-types": "tsc --noEmit",
-    "test": "tsx --test \"src/**/*.test.ts\""
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "prepublishOnly": "pnpm run check-types && pnpm run test && pnpm run build"
   },
   "peerDependencies": {
     "react": ">=18"

@@ -1,0 +1,112 @@
+# Production stack for the Oracle Cloud VM.
+# Run with:  docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+#
+# Two ways to expose it (see DEPLOYMENT.md):
+#   * SHARED VM (default): another project's Caddy owns ports 80/443. It reaches this stack over
+#     the external docker network "shared-proxy", at chaiauth-web:3000 and chaiauth-api:8000.
+#   * DEDICATED VM: add `--profile standalone` to also start the bundled Caddy.
+#
+# Service names are prefixed (chaiauth-*) on purpose: on a shared network, generic names like
+# "api" or "web" would collide with another project's containers.
+services:
+  chaiauth-db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    container_name: chaiauth-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: chaiauth
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chaiauth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+
+  chaiauth-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: chaiauth-redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  chaiauth-api:
+    image: ${DOCKERHUB_USERNAME}/chaiauth-api:latest
+    restart: unless-stopped
+    container_name: chaiauth-api
+    depends_on:
+      chaiauth-db:
+        condition: service_healthy
+      chaiauth-redis:
+        condition: service_started
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      # Internal Docker hostnames, not localhost
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@chaiauth-db:5432/chaiauth
+      REDIS_HOST: chaiauth-redis
+      REDIS_PORT: 6379
+      BASE_URL: https://${API_DOMAIN}
+      FRONTEND_URL: https://${WEB_DOMAIN}
+      ALLOWED_ORIGINS: https://${WEB_DOMAIN}
+    volumes:
+      # OIDC signing keys live on the server only (never in git or the image)
+      - ./cert:/app/apps/api/cert:ro
+    networks:
+      - app-network
+      - shared-proxy
+
+  chaiauth-web:
+    image: ${DOCKERHUB_USERNAME}/chaiauth-web:latest
+    restart: unless-stopped
+    container_name: chaiauth-web
+    depends_on:
+      - chaiauth-api
+    networks:
+      - app-network
+      - shared-proxy
+
+  # Only for a dedicated VM: docker compose --profile standalone ...
+  caddy:
+    profiles: ["standalone"]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    container_name: chaiauth-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - chaiauth-web
+      - chaiauth-api
+    networks:
+      - app-network
+      - shared-proxy
+
+volumes:
+  pg_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-network:
+    driver: bridge
+  # Created once on the VM: docker network create shared-proxy
+  shared-proxy:
+    external: true
+    name: shared-proxy

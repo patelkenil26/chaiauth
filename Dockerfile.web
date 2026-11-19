@@ -1,0 +1,45 @@
+# =========================================================================
+# Production image for the ChaiAuth dashboard (apps/web, Next.js standalone)
+# =========================================================================
+FROM node:20-alpine AS base
+RUN npm install -g pnpm@9.0.0
+WORKDIR /app
+
+# ---- Stage 1: build ----
+FROM base AS builder
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+COPY packages ./packages
+COPY apps/web ./apps/web
+
+# NEXT_PUBLIC_* values are inlined into the browser bundle at build time,
+# so they must be passed as build args (they are public by design).
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_OIDC_URL
+ARG NEXT_PUBLIC_FRONTEND_URL
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_OIDC_URL=${NEXT_PUBLIC_OIDC_URL}
+ENV NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN pnpm install --frozen-lockfile
+# Call next directly: the package "build" script expects a root .env file.
+RUN pnpm --filter=web exec next build
+
+# ---- Stage 2: small runtime image ----
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+
+EXPOSE 3000
+CMD ["node", "apps/web/server.js"]

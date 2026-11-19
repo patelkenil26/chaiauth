@@ -1,0 +1,47 @@
+name: Publish SDK packages to npm
+
+# Publishes @chaiauth/react and @chaiauth/node.
+# How to release:
+#   1. Bump "version" in packages/react/package.json and/or packages/node/package.json
+#   2. git tag sdk-v0.1.0 && git push origin sdk-v0.1.0     (or run this workflow manually)
+# Needs the repository secret NPM_TOKEN (an npm "Automation" token with publish rights to the @chaiauth scope).
+
+on:
+  push:
+    tags:
+      - "sdk-v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Setup pnpm 9
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+          run_install: false
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check, test and build the SDKs
+        run: |
+          pnpm --filter @chaiauth/react --filter @chaiauth/node run check-types
+          pnpm --filter @chaiauth/react --filter @chaiauth/node run test
+          pnpm --filter @chaiauth/react --filter @chaiauth/node run build
+
+      # Publishes only the packages whose version is not on npm yet; already-published versions are skipped.
+      - name: Publish to npm
+        run: pnpm --filter @chaiauth/react --filter @chaiauth/node publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,27 @@
+# =========================================================================
+# Production image for the ChaiAuth API (apps/api, Express + tRPC + OIDC)
+# =========================================================================
+FROM node:20-alpine
+
+RUN npm install -g pnpm@9.0.0
+WORKDIR /app
+
+# 1. Workspace manifests (cached layer for dependency install)
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json .npmrc ./
+
+# 2. Shared packages + API source
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+# 3. Install and build (tsup bundles the @repo/* workspace packages)
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter=@repo/api build
+
+ENV NODE_ENV=production
+ENV PORT=8000
+EXPOSE 8000
+
+# The API reads OIDC signing keys from <cwd>/cert, so run from apps/api.
+# The keys are NOT in the image: docker-compose mounts them at /app/apps/api/cert.
+WORKDIR /app/apps/api
+CMD ["node", "dist/index.js"]

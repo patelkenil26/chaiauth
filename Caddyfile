@@ -1,0 +1,13 @@
+# Used ONLY with `--profile standalone` (a VM where ChaiAuth owns ports 80/443).
+# On a shared VM, paste these two blocks into the existing Caddyfile instead (see DEPLOYMENT.md).
+# WEB_DOMAIN and API_DOMAIN come from .env.production via docker-compose.
+
+{$WEB_DOMAIN} {
+    encode gzip zstd
+    reverse_proxy chaiauth-web:3000
+}
+
+{$API_DOMAIN} {
+    encode gzip zstd
+    reverse_proxy chaiauth-api:8000
+}
