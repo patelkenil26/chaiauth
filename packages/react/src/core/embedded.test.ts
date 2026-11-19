@@ -263,3 +263,32 @@ describe("sign up", () => {
     );
   });
 });
+
+describe("password reset and email verification (sent as the app)", () => {
+  test("forgot password names the app and passes the captcha token", async () => {
+    const h = setup(ok, { "/o/forgot-password": () => json({ success: true, message: "If an account exists, a link was sent." }) });
+    const message = await h.client.forgotPassword({ email: "asha@example.com", captchaToken: "cf-token" });
+    assert.equal(message, "If an account exists, a link was sent.");
+    assert.deepEqual(h.otherBodies["/o/forgot-password"], { client_id: CLIENT_ID, email: "asha@example.com", captchaToken: "cf-token" });
+  });
+
+  test("reset password sends the token and the new password", async () => {
+    const h = setup(ok, { "/o/reset-password": () => json({ success: true, message: "Password updated." }) });
+    assert.equal(await h.client.resetPassword({ token: "tok", password: "N3w!password" }), "Password updated.");
+    assert.deepEqual(h.otherBodies["/o/reset-password"], { client_id: CLIENT_ID, token: "tok", password: "N3w!password" });
+  });
+
+  test("an expired reset link surfaces the server message", async () => {
+    const h = setup(ok, { "/o/reset-password": () => json({ success: false, message: "Invalid or expired reset token", code: "BAD_REQUEST" }, 400) });
+    await assert.rejects(
+      () => h.client.resetPassword({ token: "old", password: "N3w!password" }),
+      (err: unknown) => err instanceof ChaiAuthError && err.message === "Invalid or expired reset token",
+    );
+  });
+
+  test("verify email posts the token for this app", async () => {
+    const h = setup(ok, { "/o/verify-email": () => json({ success: true, message: "Email verified." }) });
+    assert.equal(await h.client.verifyEmail("tok"), "Email verified.");
+    assert.deepEqual(h.otherBodies["/o/verify-email"], { client_id: CLIENT_ID, token: "tok" });
+  });
+});

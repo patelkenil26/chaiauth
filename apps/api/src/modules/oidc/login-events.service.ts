@@ -1,6 +1,7 @@
 import { and, db, desc, eq, isNull } from "@repo/database";
 import { loginEventsTable, usersTable, type SelectLoginEvent } from "@repo/database/schema";
 import { logger } from "@repo/logger";
+import type { EmailBrand } from "../../common/email/brand";
 import { emailService } from "../../common/email/email.service";
 import { describeLocation, type ClientContext } from "../../common/utils/client-context";
 import { runSafely } from "../../common/utils/safe-async";
@@ -87,10 +88,12 @@ export const loginEventsService = {
     userId: string;
     clientId: string;
     clientName: string;
+    /** Email as this app, when it has one for this user. */
+    brand?: EmailBrand;
     method: string;
     context: ClientContext;
   }): Promise<SelectLoginEvent | null> {
-    const { userId, clientId, clientName, method, context } = params;
+    const { userId, clientId, clientName, brand, method, context } = params;
     try {
       const newDevice = await isNewDevice(userId, context);
 
@@ -122,11 +125,18 @@ export const loginEventsService = {
         if (user?.email) {
           void runSafely(
             "Suspicious login email",
-            emailService.sendSuspiciousLoginEmail(user.email, {
-              device: `${context.browser} on ${context.os} (signing in to ${clientName})`,
-              location: describeLocation(context) ?? context.ip ?? "Unknown location",
-              time: new Date().toUTCString(),
-            }),
+            emailService.sendSuspiciousLoginEmail(
+              user.email,
+              {
+                // With an app brand the email already is "from the app"; otherwise name the app
+                device: brand
+                  ? `${context.browser} on ${context.os}`
+                  : `${context.browser} on ${context.os} (signing in to ${clientName})`,
+                location: describeLocation(context) ?? context.ip ?? "Unknown location",
+                time: new Date().toUTCString(),
+              },
+              brand,
+            ),
           );
         }
       }

@@ -1,4 +1,5 @@
 import { config } from "../config/env.config";
+import { chaiAuthBrand, type EmailBrand } from "./brand";
 import { emailProvider } from "./email.provider";
 import {
   dataExportEmail,
@@ -20,33 +21,47 @@ import {
 const frontendUrl = (path: string, token?: string) =>
   `${config.app.frontendUrl}${path}${token ? `?token=${encodeURIComponent(token)}` : ""}`;
 
+/**
+ * Links go to the brand's own site: an app that sends its users through ChaiAuth's embedded forms
+ * hosts `/verify-email` and `/reset-password` pages itself, so nothing ever shows "ChaiAuth".
+ */
+const linkFor = (brand: EmailBrand | undefined, path: string, token: string) =>
+  brand?.isApp ? `${brand.url}${path}?token=${encodeURIComponent(token)}` : frontendUrl(path, token);
+
+const nameOf = (brand?: EmailBrand) => (brand ?? chaiAuthBrand()).name;
+const fromOf = (brand?: EmailBrand) => (brand?.isApp ? brand.fromName : undefined);
+
 export const emailService = {
-  sendVerificationEmail: (to: string, token: string) =>
+  sendVerificationEmail: (to: string, token: string, brand?: EmailBrand) =>
     emailProvider.send({
       to,
-      subject: "Verify your ChaiAuth email",
-      html: verificationEmail(frontendUrl("/verify-email", token)),
+      fromName: fromOf(brand),
+      subject: `Verify your ${nameOf(brand)} email`,
+      html: verificationEmail(linkFor(brand, "/verify-email", token), brand),
     }),
 
-  sendResetPasswordEmail: (to: string, token: string) =>
+  sendResetPasswordEmail: (to: string, token: string, brand?: EmailBrand) =>
     emailProvider.send({
       to,
-      subject: "Reset your ChaiAuth password",
-      html: resetPasswordEmail(frontendUrl("/reset-password", token)),
+      fromName: fromOf(brand),
+      subject: `Reset your ${nameOf(brand)} password`,
+      html: resetPasswordEmail(linkFor(brand, "/reset-password", token), brand),
     }),
 
-  sendWelcomeEmail: (to: string, name: string) =>
+  sendWelcomeEmail: (to: string, name: string, brand?: EmailBrand) =>
     emailProvider.send({
       to,
-      subject: "Welcome to ChaiAuth",
-      html: welcomeEmail(name, frontendUrl("/dashboard")),
+      fromName: fromOf(brand),
+      subject: `Welcome to ${nameOf(brand)}`,
+      html: welcomeEmail(name, brand?.isApp ? brand.url : frontendUrl("/dashboard"), brand),
     }),
 
-  sendPasswordChangedEmail: (to: string) =>
+  sendPasswordChangedEmail: (to: string, brand?: EmailBrand) =>
     emailProvider.send({
       to,
-      subject: "Your ChaiAuth password was changed",
-      html: passwordChangedEmail(),
+      fromName: fromOf(brand),
+      subject: `Your ${nameOf(brand)} password was changed`,
+      html: passwordChangedEmail(brand),
     }),
 
   sendDeveloperAppRegisteredEmail: (to: string, appName: string, clientId: string) =>
@@ -63,18 +78,20 @@ export const emailService = {
       html: magicLinkEmail(frontendUrl("/magic-link", token)),
     }),
 
-  sendOtpEmail: (to: string, otp: string, appName?: string) =>
+  sendOtpEmail: (to: string, otp: string, brand?: EmailBrand) =>
     emailProvider.send({
       to,
-      subject: `${otp} is your ChaiAuth login code`,
-      html: otpEmail(otp, appName),
+      fromName: fromOf(brand),
+      subject: `${otp} is your ${nameOf(brand)} login code`,
+      html: otpEmail(otp, brand),
     }),
 
-  sendSuspiciousLoginEmail: (to: string, details: SuspiciousLoginDetails) =>
+  sendSuspiciousLoginEmail: (to: string, details: SuspiciousLoginDetails, brand?: EmailBrand) =>
     emailProvider.send({
       to,
-      subject: "New sign-in to your ChaiAuth account",
-      html: suspiciousLoginEmail(details),
+      fromName: fromOf(brand),
+      subject: `New sign-in to your ${nameOf(brand)} account`,
+      html: suspiciousLoginEmail(details, brand),
     }),
 
   sendDataExportEmail: (to: string, token: string) =>

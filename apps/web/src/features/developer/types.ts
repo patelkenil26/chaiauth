@@ -5,6 +5,10 @@ export type OAuthApp = {
   applicationUrl?: string;
   redirectUris: string[];
   allowedIdps: string[];
+  /** Email branding: emails sent from this app's own forms use these instead of ChaiAuth's. */
+  logoUrl?: string;
+  brandColor?: string;
+  emailFromName?: string;
   createdAt: string;
 };
 

@@ -1,4 +1,5 @@
 import type { SelectClient } from "@repo/database/schema";
+import type { EmailBrand } from "../../common/email/brand";
 import { ApiError } from "../../common/errors/api-error";
 import { emailService } from "../../common/email/email.service";
 import { generateToken, hashToken, safeEqual } from "../../common/utils/crypto";
@@ -31,6 +32,9 @@ export const clientService = {
       applicationUrl: input.applicationUrl,
       redirectUri: input.redirectUri,
       ...(input.allowedIdps !== undefined && { allowedIdps: input.allowedIdps }),
+      ...(input.logoUrl && { logoUrl: input.logoUrl }),
+      ...(input.brandColor && { brandColor: input.brandColor }),
+      ...(input.emailFromName && { emailFromName: input.emailFromName }),
     });
 
     void runSafely(
@@ -58,6 +62,9 @@ export const clientService = {
       ...(input.applicationUrl && { applicationUrl: input.applicationUrl }),
       ...(input.redirectUri && { redirectUri: input.redirectUri }),
       ...(input.allowedIdps !== undefined && { allowedIdps: input.allowedIdps }),
+      ...(input.logoUrl && { logoUrl: input.logoUrl }),
+      ...(input.brandColor && { brandColor: input.brandColor }),
+      ...(input.emailFromName && { emailFromName: input.emailFromName }),
     });
   },
 
@@ -73,6 +80,30 @@ export const clientService = {
     if (!client) throw ApiError.notFound("Client not found");
     if (client.redirectUri !== redirectUri) throw ApiError.badRequest("Invalid redirect uri");
     return client;
+  },
+
+  /** The app's identity for emails. Needs the Application URL: links in the emails point there. */
+  brandOf(client: SelectClient): EmailBrand | undefined {
+    if (!client.applicationUrl) return undefined;
+    return {
+      name: client.displayName,
+      url: client.applicationUrl.replace(/\/+$/, ""),
+      logoUrl: client.logoUrl ?? null,
+      color: client.brandColor ?? null,
+      fromName: client.emailFromName || client.displayName,
+      isApp: true,
+    };
+  },
+
+  /**
+   * The app's brand, but only for a user who has signed up / signed in to it. Anyone can register an app
+   * with any name and URL, so without this check an app could send ChaiAuth-sent mail (with links to its own
+   * domain) to arbitrary people.
+   */
+  async brandForUser(client: SelectClient, userId: string): Promise<EmailBrand | undefined> {
+    const brand = this.brandOf(client);
+    if (!brand) return undefined;
+    return (await clientRepository.hasConsent(userId, client.clientId)) ? brand : undefined;
   },
 
   /** Constant-time check of a presented secret against the stored hash. */

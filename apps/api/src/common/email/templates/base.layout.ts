@@ -1,5 +1,5 @@
-import { config } from "../../config/env.config";
 import { escapeHtml } from "../../utils/html";
+import { chaiAuthBrand, type EmailBrand } from "../brand";
 
 /**
  * Shared building blocks for every transactional email.
@@ -36,7 +36,6 @@ const TONES: Record<Tone, { bg: string; border: string; text: string; tile: stri
   danger: { bg: "#FDEEEC", border: "#F6C9C3", text: "#9B2C1F", tile: "#FADDD9" },
 };
 
-const logoUrl = () => `${config.app.frontendUrl.replace(/\/+$/, "")}/logo/chaiauth-app-icon-512.png`;
 
 export const heading = (text: string) =>
   `<h1 class="e-ink" style="margin: 0 0 12px 0; font-family: ${FONT_DISPLAY}; font-size: 24px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em; color: ${C.ink};">${text}</h1>`;
@@ -116,10 +115,46 @@ const DARK_CSS = `
       .e-brandword { color: #F58A3C !important; }
     }`;
 
-/** Wraps `content` (already-safe HTML) in the branded email shell. */
-export const baseTemplate = (title: string, content: string, preheader = "") => {
-  const site = config.app.frontendUrl.replace(/\/+$/, "");
-  return `
+const DEFAULT_ACCENTS = ["#EA6A1F", "#C2510F", "#F58A3C"];
+
+/** Re-colours the default orange accents (button, links, dark mode) with an app's brand colour. */
+const applyBrandColor = (html: string, color: string | null): string =>
+  color && /^#[0-9a-fA-F]{6}$/.test(color) ? DEFAULT_ACCENTS.reduce((out, c) => out.split(c).join(color), html) : html;
+
+const headerHtml = (brand: EmailBrand) => {
+  const logo = brand.logoUrl
+    ? `<td valign="middle" style="padding-right: 10px;">
+                    <img src="${escapeHtml(brand.logoUrl)}" width="36" height="36" alt="${escapeHtml(brand.name)}" style="display: block; width: 36px; height: 36px; border-radius: 9px;">
+                  </td>`
+    : "";
+  // ChaiAuth keeps its two-tone wordmark; an app is shown by plain name
+  const wordmark = brand.isApp
+    ? escapeHtml(brand.name)
+    : `Chai<span class="e-brandword" style="color: ${C.brand};">Auth</span>`;
+  return `<table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
+                <tr>
+                  ${logo}
+                  <td valign="middle">
+                    <span class="e-ink" style="font-family: ${FONT_DISPLAY}; font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: ${C.ink};">${wordmark}</span>
+                  </td>
+                </tr>
+              </table>`;
+};
+
+const footerHtml = (brand: EmailBrand) => {
+  const links = brand.isApp
+    ? ""
+    : `<a class="e-subtle" href="${escapeHtml(brand.url)}/privacy" style="color: ${C.subtle}; text-decoration: underline;">Privacy</a>
+              &nbsp;&middot;&nbsp;
+              <a class="e-subtle" href="${escapeHtml(brand.url)}/terms" style="color: ${C.subtle}; text-decoration: underline;">Terms</a>
+              <br>`;
+  return `${links}
+              &copy; ${new Date().getFullYear()} ${escapeHtml(brand.name)}. This is an automated message, please do not reply.`;
+};
+
+/** Wraps `content` (already-safe HTML) in the email shell, branded as ChaiAuth or as the given app. */
+export const baseTemplate = (title: string, content: string, preheader = "", brand: EmailBrand = chaiAuthBrand()) => {
+  const html = `
 <!DOCTYPE html>
 <html lang="en" style="color-scheme: light dark; supported-color-schemes: light dark;">
 <head>
@@ -149,16 +184,7 @@ export const baseTemplate = (title: string, content: string, preheader = "") => 
         <table class="e-card" role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; width: 100%; background-color: ${C.card}; border: 1px solid ${C.border}; border-radius: 16px;">
           <tr>
             <td class="e-pad" style="padding: 36px 40px; text-align: left;">
-              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin: 0 0 28px 0;">
-                <tr>
-                  <td valign="middle" style="padding-right: 10px;">
-                    <img src="${escapeHtml(logoUrl())}" width="36" height="36" alt="ChaiAuth" style="display: block; width: 36px; height: 36px; border-radius: 9px;">
-                  </td>
-                  <td valign="middle">
-                    <span class="e-ink" style="font-family: ${FONT_DISPLAY}; font-size: 20px; font-weight: 700; letter-spacing: -0.03em; color: ${C.ink};">Chai<span class="e-brandword" style="color: ${C.brand};">Auth</span></span>
-                  </td>
-                </tr>
-              </table>
+              ${headerHtml(brand)}
               ${content}
             </td>
           </tr>
@@ -166,11 +192,7 @@ export const baseTemplate = (title: string, content: string, preheader = "") => 
         <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; width: 100%; margin-top: 24px;">
           <tr>
             <td align="center" class="e-subtle" style="font-family: ${FONT_BODY}; font-size: 12px; line-height: 1.7; color: ${C.subtle};">
-              <a class="e-subtle" href="${escapeHtml(site)}/privacy" style="color: ${C.subtle}; text-decoration: underline;">Privacy</a>
-              &nbsp;&middot;&nbsp;
-              <a class="e-subtle" href="${escapeHtml(site)}/terms" style="color: ${C.subtle}; text-decoration: underline;">Terms</a>
-              <br>
-              &copy; ${new Date().getFullYear()} ChaiAuth. This is an automated message, please do not reply.
+              ${footerHtml(brand)}
             </td>
           </tr>
         </table>
@@ -179,4 +201,5 @@ export const baseTemplate = (title: string, content: string, preheader = "") => 
   </table>
 </body>
 </html>`;
+  return applyBrandColor(html, brand.isApp ? brand.color : null);
 };

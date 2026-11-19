@@ -24,7 +24,7 @@ export const developerApi = {
   revokeApiKey: async (clientId: string, keyId: string) => {
     return apiClient.delete(`${OIDC_BASE}/developer/clients/${clientId}/api-keys/${keyId}`);
   },
-  updateClient: async (clientId: string, data: { displayName?: string; applicationUrl?: string; redirectUri?: string; allowedIdps?: string[] }) => {
+  updateClient: async (clientId: string, data: { displayName?: string; applicationUrl?: string; redirectUri?: string; allowedIdps?: string[]; logoUrl?: string; brandColor?: string; emailFromName?: string }) => {
     return apiClient.patch(`${OIDC_BASE}/developer/clients/${clientId}`, data);
   }
 };

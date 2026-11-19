@@ -108,3 +108,15 @@ user?.login_context?.is_new_device;      // true the first time this browser + O
 ```
 
 It is a signed claim of the ID token (`login_context`), delivered to your server in backend mode. Store it with `event_id` as a unique key. ChaiAuth also keeps its own login history and emails the user about sign-ins from unfamiliar devices. Full field list: the *Login context* section of the ChaiAuth docs.
+
+## Branded emails (your users never see ChaiAuth)
+
+Emails triggered from your own forms (sign-up verification, password reset, email codes, new-device alerts) go out as **your app**: your name, logo, colour and sender name, with links to your own site. Set **Application URL**, **Sender name**, **Logo URL** and **Brand colour** on your app in the developer console, then add three pages:
+
+```tsx
+<ForgotPasswordForm turnstileSiteKey={...} />          // /forgot-password
+<ResetPasswordForm token={searchParams.token} />        // /reset-password?token=...  (link in the email)
+<VerifyEmail token={searchParams.token} />              // /verify-email?token=...    (link in the email)
+```
+
+App-branded email is only sent to users who signed up or signed in through your app. Headless equivalents: `forgotPassword`, `resetPassword`, `verifyEmail` on `useChaiAuth()`.

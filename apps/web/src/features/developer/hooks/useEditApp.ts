@@ -7,7 +7,10 @@ const editAppSchema = z.object({
   name: z.string().min(2, "Enter an application name."),
   applicationUrl: z.union([z.string().url("Enter a valid HTTP or HTTPS URL."), z.literal("")]).optional(),
   uri: z.string().url("Enter a complete HTTP or HTTPS callback URL."),
-  allowedIdps: z.array(z.string()).min(1, "Select at least one sign-in method.")
+  allowedIdps: z.array(z.string()).min(1, "Select at least one sign-in method."),
+  logoUrl: z.union([z.string().url("Enter a valid https:// image URL.").startsWith("https://", "The logo must use https."), z.literal("")]).optional(),
+  brandColor: z.union([z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a colour like #65a30d."), z.literal("")]).optional(),
+  emailFromName: z.union([z.string().min(2, "At least 2 characters.").max(80).regex(/^[^<>"\r\n,;:@]+$/, "Remove < > \" , ; : @"), z.literal("")]).optional()
 });
 
 export type EditAppForm = z.infer<typeof editAppSchema>;
@@ -22,7 +25,10 @@ export function useEditApp(
       name: app.name, 
       applicationUrl: app.applicationUrl || "",
       uri: app.redirectUris[0] || "", 
-      allowedIdps: app.allowedIdps || []
+      allowedIdps: app.allowedIdps || [],
+      logoUrl: app.logoUrl || "",
+      brandColor: app.brandColor || "",
+      emailFromName: app.emailFromName || ""
     }
   });
 

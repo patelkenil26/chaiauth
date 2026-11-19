@@ -25,6 +25,7 @@ const NAV = [
       { id: "token-exchange", label: "Token exchange" },
       { id: "react-sdk", label: "React SDK" },
       { id: "embedded-sign-in", label: "Embedded sign-in forms" },
+      { id: "branded-emails", label: "Branded emails" },
     ],
   },
   {
@@ -131,7 +132,7 @@ export const authOptions = {
 
 export default NextAuth(authOptions);`;
 
-  const { sdkProviderCode, sdkUsageCode, embeddedFormsCode, embeddedBackendCode, loginContextCode, apiKeyCode, apiKeyResponse } =
+  const { sdkProviderCode, sdkUsageCode, embeddedFormsCode, embeddedBackendCode, brandedEmailsCode, loginContextCode, apiKeyCode, apiKeyResponse } =
     buildSnippets(backendHost, frontendHost);
 
   // Scroll spy + reading progress
@@ -414,6 +415,36 @@ export default NextAuth(authOptions);`;
             only ever holds a one-time code. Passwords go from the browser straight to ChaiAuth and never touch your server.
           </Callout>
 
+          <H2
+            id="branded-emails"
+            sub="When a user acts on YOUR site, every email goes out as your app. They never learn that ChaiAuth exists."
+          >
+            Branded emails
+          </H2>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {[
+              ["Sent as your app", "Verify email, welcome, reset password, password changed, sign-in codes and new-device alerts use your app's name, logo, colour and sender name. 'ChaiAuth' appears nowhere."],
+              ["Links go to your site", "Verification and reset links open your own /verify-email and /reset-password pages, which render the SDK components below."],
+              ["Set it once", "In the developer console, open your app and set Application URL, Sender name, Logo URL and Brand colour."],
+              ["Only for your users", "App-branded email is sent only to people who signed up or signed in through your app. Everyone else gets nothing (reset) or a neutral ChaiAuth email (codes)."],
+            ].map(([t, d]) => (
+              <div key={t} className="ca-glass rounded-2xl p-5">
+                <div className="text-sm font-semibold text-foreground">{t}</div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{d}</p>
+              </div>
+            ))}
+          </div>
+          <Reveal className="mt-6 space-y-5">
+            <CodeBlock label="your pages" code={brandedEmailsCode} />
+          </Reveal>
+          <Callout>
+            <strong>Sender address:</strong> the display name is your app&apos;s, but the address is ChaiAuth&apos;s verified
+            sending domain. To send from your own domain (for example{" "}
+            <code className="ca-mono text-primary">noreply@yourapp.com</code>), the ChaiAuth operator has to verify that domain
+            with the email provider. <strong>Not covered:</strong> Google&apos;s own consent screen still shows the name of the
+            Google OAuth client, which is ChaiAuth&apos;s.
+          </Callout>
+
           <H2 id="endpoints" sub={`Base URL: ${backendHost}`}>Endpoints</H2>
           <Reveal className="mt-6">
             <div className="ca-glass divide-y divide-border overflow-hidden rounded-2xl">
@@ -425,6 +456,9 @@ export default NextAuth(authOptions);`;
                 ["POST", "/o/authorize/mfa", "Embedded sign-in: second factor (authenticator or backup code)"],
                 ["POST", "/o/register", "Embedded sign-up (needs a Turnstile token)"],
                 ["POST", "/o/email-code", "Embedded passwordless: email a 6-digit sign-in code"],
+                ["POST", "/o/forgot-password", "Embedded: email a reset link that opens on your site"],
+                ["POST", "/o/reset-password", "Embedded: set a new password with the emailed token"],
+                ["POST", "/o/verify-email", "Embedded: confirm an email address with the emailed token"],
                 ["POST", "/o/token", "Exchange a code or refresh token for tokens"],
                 ["GET", "/o/userinfo", "Read approved profile claims (Bearer token)"],
                 ["POST", "/o/revoke", "Revoke a token"],

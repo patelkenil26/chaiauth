@@ -1,4 +1,5 @@
 import { ApiError } from "../../common/errors/api-error";
+import type { EmailBrand } from "../../common/email/brand";
 import { emailService } from "../../common/email/email.service";
 import { redis } from "../../common/config/redis";
 import { generateToken, generateOtp, hashToken, safeEqual } from "../../common/utils/crypto";
@@ -23,8 +24,15 @@ export type LoginOutcome =
 
 const INVALID_CREDENTIALS = "Invalid credentials";
 
+/**
+ * Picks the email brand for a user once we know who they are. Used by flows started from an app's own
+ * forms: the app's branding is only applied when the user actually has a relationship with that app.
+ */
+export type BrandResolver = (userId: string) => Promise<EmailBrand | undefined>;
+
 export const authService = {
-  async register(input: RegisterInput): Promise<PublicUser> {
+  /** `brand`: send the verification email as this app (sign-up from the app's own form). */
+  async register(input: RegisterInput, brand?: EmailBrand): Promise<PublicUser> {
     const { name, email, username, phone, password, role } = input;
 
     const existing = await userRepository.findByAnyIdentifier({ email, username, phone });
@@ -50,7 +58,7 @@ export const authService = {
     });
 
     // The account exists already: a mail failure must not fail the registration.
-    void runSafely("Verification email", emailService.sendVerificationEmail(email, rawToken));
+    void runSafely("Verification email", emailService.sendVerificationEmail(email, rawToken, brand));
 
     return toPublicUser(user);
   },
@@ -155,7 +163,7 @@ export const authService = {
     await userRepository.update(userId, { otpCode: null, otpExpires: null });
   },
 
-  async sendOtp({ email, phone }: SendOtpInput): Promise<void> {
+  async sendOtp({ email, phone }: SendOtpInput, brandFor?: BrandResolver): Promise<void> {
     const user = await userRepository.findByAnyIdentifier({ email, phone });
 
     // Always succeed from the caller's point of view (no user enumeration)
@@ -168,7 +176,8 @@ export const authService = {
     });
 
     // Delivery is by email; SMS (Twilio / SNS) plugs in here later.
-    void runSafely("OTP email", emailService.sendOtpEmail(user.email, otp));
+    const brand = await brandFor?.(user.id);
+    void runSafely("OTP email", emailService.sendOtpEmail(user.email, otp, brand));
   },
 
   /** Issues a new access token for a valid, non-revoked refresh token. */
@@ -197,7 +206,7 @@ export const authService = {
     if (refreshToken) await sessionsService.revokeByRefreshToken(userId, refreshToken);
   },
 
-  async verifyEmail(token: string): Promise<void> {
+  async verifyEmail(token: string, brandFor?: BrandResolver): Promise<void> {
     const user = await userRepository.findByVerificationToken(hashToken(token));
     if (!user) throw ApiError.badRequest("Invalid or expired verification token");
 
@@ -217,13 +226,22 @@ export const authService = {
     });
     if (pendingEmail) await redis.del(pendingKey);
 
-    void runSafely("Welcome email", emailService.sendWelcomeEmail(pendingEmail ?? user.email, user.name));
+    const brand = await brandFor?.(user.id);
+    void runSafely("Welcome email", emailService.sendWelcomeEmail(pendingEmail ?? user.email, user.name, brand));
   },
 
   /** Responds the same whether or not the email exists (no user enumeration). */
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(email: string, brandFor?: BrandResolver): Promise<void> {
     const user = await userRepository.findByEmail(email);
     if (!user || user.deletedAt) return;
+
+    // Started from an app's form: the link goes to the app's own site, so it may only be sent when the
+    // user has a relationship with that app (otherwise any app could mail reset links to its own domain).
+    let brand: EmailBrand | undefined;
+    if (brandFor) {
+      brand = await brandFor(user.id);
+      if (!brand) return;
+    }
 
     const { rawToken, hashedToken } = generateToken();
     await userRepository.update(user.id, {
@@ -231,10 +249,10 @@ export const authService = {
       resetPasswordExpires: new Date(Date.now() + TTL.resetPasswordMs),
     });
 
-    void runSafely("Reset password email", emailService.sendResetPasswordEmail(email, rawToken));
+    void runSafely("Reset password email", emailService.sendResetPasswordEmail(email, rawToken, brand));
   },
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(token: string, newPassword: string, brandFor?: BrandResolver): Promise<void> {
     const user = await userRepository.findByValidResetToken(hashToken(token));
     if (!user) throw ApiError.badRequest("Invalid or expired reset token");
 
@@ -247,6 +265,7 @@ export const authService = {
     // Whoever knew the old password (or held a stolen session) must be signed out everywhere
     await sessionsService.revokeAll(user.id);
 
-    void runSafely("Password changed email", emailService.sendPasswordChangedEmail(user.email));
+    const brand = await brandFor?.(user.id);
+    void runSafely("Password changed email", emailService.sendPasswordChangedEmail(user.email, brand));
   },
 };

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { emailField, nameField, passwordField } from "../../common/schemas/fields";
+import { emailField, nameField, passwordField, tokenField } from "../../common/schemas/fields";
 import { loginFieldsShape, withLoginRules } from "../auth/dto/login.dto";
 import { mfaCodeField } from "../auth/mfa/mfa.dto";
 
@@ -70,6 +70,27 @@ export const embeddedEmailCodeDto = z.object({
 });
 export type EmbeddedEmailCodeInput = z.infer<typeof embeddedEmailCodeDto>;
 
+/** Email verification link, opened on the APP's own page (`/verify-email?token=`). */
+export const embeddedVerifyEmailDto = z.object({
+  client_id: z.string().min(1).max(255),
+  token: tokenField,
+});
+export type EmbeddedVerifyEmailInput = z.infer<typeof embeddedVerifyEmailDto>;
+
+/** "Forgot password" from the app's own form. The reset link goes to the app's `/reset-password` page. */
+export const embeddedForgotPasswordDto = z.object({
+  client_id: z.string().min(1).max(255),
+  email: emailField,
+});
+export type EmbeddedForgotPasswordInput = z.infer<typeof embeddedForgotPasswordDto>;
+
+export const embeddedResetPasswordDto = z.object({
+  client_id: z.string().min(1).max(255),
+  token: tokenField,
+  password: passwordField,
+});
+export type EmbeddedResetPasswordInput = z.infer<typeof embeddedResetPasswordDto>;
+
 // ── Token endpoint ──────────────────────────────────────────
 const clientAuthFields = {
   client_id: z.string().min(1).max(255),
@@ -99,11 +120,27 @@ export type RevokeInput = z.infer<typeof revokeDto>;
 // ── Developer portal (client registration) ─────────────────
 const allowedIdpsField = z.array(z.string().min(1).max(50)).max(10);
 
+// White-label branding for emails sent on the app's behalf
+const logoUrlField = z
+  .url("Logo URL must be a valid URL")
+  .max(500)
+  .refine((v) => new URL(v).protocol === "https:", "Logo URL must use https");
+const brandColorField = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Brand colour must look like #RRGGBB");
+const emailFromNameField = z
+  .string()
+  .trim()
+  .min(2)
+  .max(80)
+  .regex(/^[^<>"\r\n,;:@]+$/, "Sender name cannot contain < > \" , ; : @ or line breaks");
+
 export const registerClientDto = z.object({
   displayName: z.string().trim().min(3).max(255),
   applicationUrl: z.url().max(255).optional(),
   redirectUri: redirectUriField,
   allowedIdps: allowedIdpsField.optional(),
+  logoUrl: logoUrlField.optional(),
+  brandColor: brandColorField.optional(),
+  emailFromName: emailFromNameField.optional(),
 });
 export type RegisterClientInput = z.infer<typeof registerClientDto>;
 
@@ -113,6 +150,9 @@ export const updateClientDto = z
     applicationUrl: z.url().max(255).optional(),
     redirectUri: redirectUriField.optional(),
     allowedIdps: allowedIdpsField.optional(),
+    logoUrl: logoUrlField.optional(),
+    brandColor: brandColorField.optional(),
+    emailFromName: emailFromNameField.optional(),
   })
   .refine((v) => Object.values(v).some((x) => x !== undefined), {
     message: "Please provide at least one field to update",

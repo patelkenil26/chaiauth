@@ -20,7 +20,10 @@ import type {
   AuthorizeMfaInput,
   AuthorizeSubmitInput,
   EmbeddedEmailCodeInput,
+  EmbeddedForgotPasswordInput,
   EmbeddedRegisterInput,
+  EmbeddedResetPasswordInput,
+  EmbeddedVerifyEmailInput,
   OidcAuthContext,
   TokenInput,
 } from "./oidc.dto";
@@ -123,6 +126,12 @@ const issueTokens = async (params: {
   };
 };
 
+const requireClient = async (clientId: string) => {
+  const client = await clientRepository.findByClientId(clientId);
+  if (!client) throw ApiError.notFound("Client not found");
+  return client;
+};
+
 export const oidcService = {
   /** Mints a short-lived, single-use authorization code for an already-authenticated user. */
   async createAuthorizationCode(params: {
@@ -143,6 +152,7 @@ export const oidcService = {
       userId,
       clientId: client.clientId,
       clientName: client.displayName,
+      brand: await clientService.brandForUser(client, userId),
       method,
       context: getClientContext(req),
     });
@@ -201,18 +211,47 @@ export const oidcService = {
     return this.createAuthorizationCode({ userId: user.id, context, req, method: "mfa" });
   },
 
-  /** Sign-up from an app's own form. Verification still happens by email before the first login. */
+  /**
+   * Sign-up from an app's own form. The verification email goes out as the APP (its name, logo and a link
+   * to its own site), so the user never sees ChaiAuth. Verification still happens before the first login.
+   */
   async registerEmbedded(input: EmbeddedRegisterInput) {
-    const client = await clientRepository.findByClientId(input.client_id);
-    if (!client) throw ApiError.notFound("Client not found");
-    await authService.register({ name: input.name, email: input.email, password: input.password, role: "customer" });
+    const client = await requireClient(input.client_id);
+    const user = await authService.register(
+      { name: input.name, email: input.email, password: input.password, role: "customer" },
+      clientService.brandOf(client),
+    );
+    // Signing up through the app's form is the user's first relationship with it: later app-branded
+    // emails (reset, codes, alerts) are allowed for this user.
+    await clientRepository.upsertConsent(user.id, client.clientId, "openid profile email");
   },
 
-  /** Emails a one-time sign-in code. Always succeeds (no user enumeration). */
+  /** Marks the email verified. Runs from the app's own /verify-email page. */
+  async verifyEmailEmbedded(input: EmbeddedVerifyEmailInput) {
+    const client = await requireClient(input.client_id);
+    await authService.verifyEmail(input.token, (userId) => clientService.brandForUser(client, userId));
+  },
+
+  /** Emails a one-time sign-in code, as the app when the user has a relationship with it. Always succeeds. */
   async sendEmailCode(input: EmbeddedEmailCodeInput) {
-    const client = await clientRepository.findByClientId(input.client_id);
-    if (!client) throw ApiError.notFound("Client not found");
-    await authService.sendOtp({ email: input.email });
+    const client = await requireClient(input.client_id);
+    await authService.sendOtp({ email: input.email }, (userId) => clientService.brandForUser(client, userId));
+  },
+
+  /**
+   * "Forgot password" from the app's form. The link points to the app's own /reset-password page, so it is
+   * only sent to users who have a relationship with the app. Always succeeds (no user enumeration).
+   */
+  async forgotPasswordEmbedded(input: EmbeddedForgotPasswordInput) {
+    const client = await requireClient(input.client_id);
+    await authService.forgotPassword(input.email, (userId) => clientService.brandForUser(client, userId));
+  },
+
+  async resetPasswordEmbedded(input: EmbeddedResetPasswordInput) {
+    const client = await requireClient(input.client_id);
+    await authService.resetPassword(input.token, input.password, (userId) =>
+      clientService.brandForUser(client, userId),
+    );
   },
 
   /** Token endpoint: authorization_code and refresh_token grants. */

@@ -45,6 +45,9 @@ export const clientRepository = {
         applicationUrl: clientsTable.applicationUrl,
         redirectUri: clientsTable.redirectUri,
         allowedIdps: clientsTable.allowedIdps,
+        logoUrl: clientsTable.logoUrl,
+        brandColor: clientsTable.brandColor,
+        emailFromName: clientsTable.emailFromName,
         createdAt: clientsTable.createdAt,
       })
       .from(clientsTable)
@@ -71,6 +74,16 @@ export const clientRepository = {
       .insert(consentsTable)
       .values({ userId, clientId, scopes })
       .onConflictDoUpdate({ target: [consentsTable.userId, consentsTable.clientId], set: { scopes } });
+  },
+
+  /** Has this user signed up to / signed in to this app before? */
+  async hasConsent(userId: string, clientId: string): Promise<boolean> {
+    const [row] = await db
+      .select({ id: consentsTable.id })
+      .from(consentsTable)
+      .where(and(eq(consentsTable.userId, userId), eq(consentsTable.clientId, clientId)))
+      .limit(1);
+    return Boolean(row);
   },
 
   // ── Users who granted this client access (server API) ──────

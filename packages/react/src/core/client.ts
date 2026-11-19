@@ -402,6 +402,27 @@ export class ChaiAuthClient {
     return body.message ?? "Account created. Check your email to verify your address.";
   }
 
+  /**
+   * "Email me a reset link". The email goes out under YOUR app's name and its link opens your own
+   * `/reset-password` page. Always succeeds for unknown emails (no account enumeration).
+   */
+  async forgotPassword(input: { email: string; captchaToken?: string }): Promise<string> {
+    const body = await this.post("/o/forgot-password", { client_id: this.config.clientId, ...input });
+    return body.message ?? "If an account exists for this email, a password reset link has been sent.";
+  }
+
+  /** Sets a new password with the token from the reset link. */
+  async resetPassword(input: { token: string; password: string }): Promise<string> {
+    const body = await this.post("/o/reset-password", { client_id: this.config.clientId, ...input });
+    return body.message ?? "Password updated. You can now sign in.";
+  }
+
+  /** Confirms an email address with the token from the verification link. */
+  async verifyEmail(token: string): Promise<string> {
+    const body = await this.post("/o/verify-email", { client_id: this.config.clientId, token });
+    return body.message ?? "Email verified. You can now sign in.";
+  }
+
   /** Starts a social sign-in (e.g. Google). The provider has to leave the page; you come back signed in. */
   async signInWithProvider(provider: string, options: EmbeddedSignInOptions = {}): Promise<void> {
     const context = options.context ?? (await this.createAuthContext(options.returnTo));

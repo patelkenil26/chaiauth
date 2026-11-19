@@ -102,6 +102,17 @@ app.get("/auth/chaiauth/start", async (req, res) => {
 //    then navigates to your callback with the code. Your server finishes the exchange (see "Token exchange").
 <SignInForm getAuthContext={() => fetch("/auth/chaiauth/start", { credentials: "include" }).then((r) => r.json()).then((j) => j.context)} />`;
 
+  const brandedEmailsCode = `// Three pages on YOUR site. The emails link to them, so users never see ChaiAuth.
+
+// app/forgot-password/page.tsx
+<ForgotPasswordForm turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />
+
+// app/reset-password/page.tsx      (link in the email: https://yourapp.com/reset-password?token=...)
+<ResetPasswordForm token={searchParams.token} successFooter={<a href="/login">Sign in</a>} />
+
+// app/verify-email/page.tsx        (link in the email: https://yourapp.com/verify-email?token=...)
+<VerifyEmail token={searchParams.token} successFooter={<a href="/login">Continue to sign in</a>} />`;
+
   const loginContextCode = `// Request the scope...
 scope=openid profile email login_context
 
@@ -128,6 +139,7 @@ scope=openid profile email login_context
     sdkUsageCode,
     embeddedFormsCode,
     embeddedBackendCode,
+    brandedEmailsCode,
     loginContextCode,
     apiKeyCode,
     apiKeyResponse,

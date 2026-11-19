@@ -27,6 +27,12 @@ export interface ChaiAuthContextValue extends AuthState {
     input: { mfaToken: string; code: string; context: AuthContext },
     options?: { returnTo?: string; backend?: boolean },
   ) => Promise<SignInResult>;
+  /** "Email me a reset link": sent as your app, opening your own /reset-password page. */
+  forgotPassword: (input: { email: string; captchaToken?: string }) => Promise<string>;
+  /** Sets a new password with the token from the reset link. */
+  resetPassword: (input: { token: string; password: string }) => Promise<string>;
+  /** Confirms an email address with the token from the verification link. */
+  verifyEmail: (token: string) => Promise<string>;
   /** Creates an account; ChaiAuth emails a verification link. Returns the confirmation message. */
   signUp: (input: { name: string; email: string; password: string; captchaToken?: string }) => Promise<string>;
   /** Social sign-in, e.g. "google". Leaves the page and comes back signed in. */
@@ -79,6 +85,9 @@ export function ChaiAuthProvider({ children, clientId, redirectUri, issuer, scop
       signInWithEmailCode: (input, options) => client.signInWithEmailCode(input, options),
       verifyMfa: (input, options) => client.verifyMfa(input, options),
       signUp: (input) => client.signUp(input),
+      forgotPassword: (input) => client.forgotPassword(input),
+      resetPassword: (input) => client.resetPassword(input),
+      verifyEmail: (token) => client.verifyEmail(token),
       signInWithProvider: (provider, options) => client.signInWithProvider(provider, options),
       signOut: () => client.signOut(),
       getAccessToken: () => client.getAccessToken(),

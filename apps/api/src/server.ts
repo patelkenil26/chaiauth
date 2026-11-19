@@ -41,7 +41,18 @@ app.use((req, res, next) =>
 );
 
 // Embedded sign-in forms on an app's own site: answer the preflight for their POST endpoints
-app.options(["/o/authorize", "/o/authorize/mfa", "/o/register", "/o/email-code"], embeddedPreflight);
+app.options(
+  [
+    "/o/authorize",
+    "/o/authorize/mfa",
+    "/o/register",
+    "/o/email-code",
+    "/o/verify-email",
+    "/o/forgot-password",
+    "/o/reset-password",
+  ],
+  embeddedPreflight,
+);
 
 app.use(
   cors({

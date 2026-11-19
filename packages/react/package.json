@@ -1,6 +1,6 @@
 {
   "name": "@chaiauth/react",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "React SDK for ChaiAuth: <SignIn />, <UserButton /> and hooks, built on OpenID Connect with PKCE.",
   "license": "MIT",
   "keywords": [

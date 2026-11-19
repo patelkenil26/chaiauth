@@ -34,14 +34,20 @@ export function EditAppModal({ app, onClose, onUpdate }: EditAppModalProps) {
             {errors.name && <p className="text-[0.78rem] text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
-            <label className="block mb-2 text-[0.8rem] font-medium text-text-soft">Homepage URL <span className="text-muted-foreground font-normal">(Optional)</span></label>
+            <label className="block mb-2 text-[0.8rem] font-medium text-text-soft">Application URL</label>
             <input 
               type="url" 
               placeholder="https://yourapp.com" 
               className={`ca-input ${errors.applicationUrl ? "border-destructive" : ""}`}
               {...register("applicationUrl")}
             />
-            {errors.applicationUrl && <p className="text-[0.78rem] text-destructive">{errors.applicationUrl.message}</p>}
+            {errors.applicationUrl ? (
+              <p className="text-[0.78rem] text-destructive">{errors.applicationUrl.message}</p>
+            ) : (
+              <p className="text-[0.75rem] text-muted-foreground">
+                The site that hosts your sign-in forms. Required for embedded sign-in, and emails link here.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="block mb-2 text-[0.8rem] font-medium text-text-soft">Redirect URI</label>
@@ -56,6 +62,33 @@ export function EditAppModal({ app, onClose, onUpdate }: EditAppModalProps) {
             ) : (
               <p className="text-[0.75rem] text-muted-foreground">Must match the callback URL used by your app exactly.</p>
             )}
+          </div>
+
+          <div className="space-y-4 pt-5 border-t border-border/50">
+            <div>
+              <label className="text-[0.8rem] font-medium text-text-soft block">Email branding</label>
+              <p className="mt-1 text-[0.75rem] text-muted-foreground">
+                Emails sent from your own forms (verify email, reset password, sign-in codes, new-device alerts) go out
+                under your app&apos;s name, never ChaiAuth&apos;s. Needs the Application URL above.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-[0.78rem] text-text-soft">Sender name</label>
+              <input type="text" placeholder={app.name} className={`ca-input ${errors.emailFromName ? "border-destructive" : ""}`} {...register("emailFromName")} />
+              {errors.emailFromName && <p className="text-[0.78rem] text-destructive">{errors.emailFromName.message}</p>}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="block text-[0.78rem] text-text-soft">Logo URL (https)</label>
+                <input type="url" placeholder="https://yourapp.com/logo.png" className={`ca-input ${errors.logoUrl ? "border-destructive" : ""}`} {...register("logoUrl")} />
+                {errors.logoUrl && <p className="text-[0.78rem] text-destructive">{errors.logoUrl.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-[0.78rem] text-text-soft">Brand colour</label>
+                <input type="text" placeholder="#65a30d" className={`ca-input ${errors.brandColor ? "border-destructive" : ""}`} {...register("brandColor")} />
+                {errors.brandColor && <p className="text-[0.78rem] text-destructive">{errors.brandColor.message}</p>}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3 pt-5 border-t border-border/50">

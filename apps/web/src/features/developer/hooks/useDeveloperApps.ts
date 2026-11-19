@@ -24,6 +24,9 @@ export function useDeveloperApps() {
         applicationUrl: c.applicationUrl || undefined,
         redirectUris: c.redirectUris || (c.redirectUri ? [c.redirectUri] : []),
         allowedIdps: c.allowedIdps || ['email', 'google'],
+        logoUrl: c.logoUrl || undefined,
+        brandColor: c.brandColor || undefined,
+        emailFromName: c.emailFromName || undefined,
         createdAt: c.createdAt || new Date().toISOString()
       }));
     },
@@ -100,7 +103,11 @@ export function useDeveloperApps() {
           displayName: data.name,
           applicationUrl: data.applicationUrl,
           redirectUri: data.uri,
-          allowedIdps: data.allowedIdps
+          allowedIdps: data.allowedIdps,
+          // Empty means "leave unchanged"
+          ...(data.logoUrl && { logoUrl: data.logoUrl }),
+          ...(data.brandColor && { brandColor: data.brandColor }),
+          ...(data.emailFromName && { emailFromName: data.emailFromName })
         }
       });
       toast.success("Application updated successfully");

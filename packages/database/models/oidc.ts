@@ -27,6 +27,10 @@ export const clientsTable = pgTable(
       .$type<string[]>()
       .notNull()
       .default(["email", "google"]),
+    // White-label branding for emails sent on this app's behalf (see email.service.ts)
+    logoUrl: varchar("logo_url", { length: 500 }),
+    brandColor: varchar("brand_color", { length: 7 }), // #RRGGBB
+    emailFromName: varchar("email_from_name", { length: 80 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("clients_developer_id_idx").on(t.developerId)],

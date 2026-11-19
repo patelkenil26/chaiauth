@@ -10,7 +10,10 @@ import type {
   AuthorizeQuery,
   AuthorizeSubmitInput,
   EmbeddedEmailCodeInput,
+  EmbeddedForgotPasswordInput,
   EmbeddedRegisterInput,
+  EmbeddedResetPasswordInput,
+  EmbeddedVerifyEmailInput,
   RevokeInput,
   TokenInput,
 } from "./oidc.dto";
@@ -97,6 +100,24 @@ export const registerEmbedded = async (req: BodyRequest<EmbeddedRegisterInput>, 
 export const sendEmailCode = async (req: BodyRequest<EmbeddedEmailCodeInput>, res: Response) => {
   await oidcService.sendEmailCode(req.body);
   ApiResponse.ok(res, "If an account exists for this email, a sign-in code has been sent.");
+};
+
+/** POST /o/verify-email: the app's own /verify-email page confirms the address. */
+export const verifyEmailEmbedded = async (req: BodyRequest<EmbeddedVerifyEmailInput>, res: Response) => {
+  await oidcService.verifyEmailEmbedded(req.body);
+  ApiResponse.ok(res, "Email verified. You can now sign in.");
+};
+
+/** POST /o/forgot-password: emails a reset link that opens on the app's own site. */
+export const forgotPasswordEmbedded = async (req: BodyRequest<EmbeddedForgotPasswordInput>, res: Response) => {
+  await oidcService.forgotPasswordEmbedded(req.body);
+  ApiResponse.ok(res, "If an account exists for this email, a password reset link has been sent.");
+};
+
+/** POST /o/reset-password: sets the new password from the app's own /reset-password page. */
+export const resetPasswordEmbedded = async (req: BodyRequest<EmbeddedResetPasswordInput>, res: Response) => {
+  await oidcService.resetPasswordEmbedded(req.body);
+  ApiResponse.ok(res, "Password updated. You can now sign in.");
 };
 
 /** POST /o/token: RFC 6749 token response (not wrapped in our envelope). */

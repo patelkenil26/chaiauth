@@ -1,11 +1,14 @@
 import { Resend } from "resend";
 import { logger } from "@repo/logger";
 import { config } from "../config/env.config";
+import { formatFrom } from "./brand";
 
 export interface EmailMessage {
   to: string;
   subject: string;
   html: string;
+  /** Display name for the "From" header (an app's name). The sending address stays ours. */
+  fromName?: string;
 }
 
 /** Transport abstraction: swap Resend for SES/SMTP without touching any caller. */
@@ -23,8 +26,8 @@ class ResendEmailProvider implements EmailProvider {
     this.client = new Resend(apiKey);
   }
 
-  async send({ to, subject, html }: EmailMessage): Promise<void> {
-    const { data, error } = await this.client.emails.send({ from: this.from, to, subject, html });
+  async send({ to, subject, html, fromName }: EmailMessage): Promise<void> {
+    const { data, error } = await this.client.emails.send({ from: formatFrom(this.from, fromName), to, subject, html });
     if (error) {
       logger.error("Resend API error", { error });
       throw new Error(`Failed to send email: ${error.message}`);

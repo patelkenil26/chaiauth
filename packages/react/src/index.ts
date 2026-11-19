@@ -4,6 +4,8 @@ export { SignIn, SignedIn, SignedOut, UserButton } from "./react/components";
 export type { SignInProps, UserButtonProps } from "./react/components";
 export { SignInForm } from "./react/sign-in-form";
 export { SignUpForm } from "./react/sign-up-form";
+export { ForgotPasswordForm, ResetPasswordForm, VerifyEmail } from "./react/account-forms";
+export type { ForgotPasswordFormProps, ResetPasswordFormProps, VerifyEmailProps } from "./react/account-forms";
 export type { SignInFormProps, SignInFormAppearance } from "./react/sign-in-form";
 export type { SignUpFormProps } from "./react/sign-up-form";
 

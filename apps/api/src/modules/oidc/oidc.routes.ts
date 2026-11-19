@@ -13,7 +13,10 @@ import {
   authorizeSubmitDto,
   clientIdParamDto,
   embeddedEmailCodeDto,
+  embeddedForgotPasswordDto,
   embeddedRegisterDto,
+  embeddedResetPasswordDto,
+  embeddedVerifyEmailDto,
   registerClientDto,
   revokeDto,
   tokenDto,
@@ -84,6 +87,29 @@ router.post(
   embeddedOriginGuard,
   validate({ body: embeddedEmailCodeDto }),
   controller.sendEmailCode,
+);
+router.post(
+  "/o/verify-email",
+  strictAuthLimiter,
+  embeddedOriginGuard,
+  validate({ body: embeddedVerifyEmailDto }),
+  controller.verifyEmailEmbedded,
+);
+// Sends mail: same anti-bot check as the hosted forgot-password page
+router.post(
+  "/o/forgot-password",
+  emailActionLimiter,
+  embeddedOriginGuard,
+  verifyCaptcha,
+  validate({ body: embeddedForgotPasswordDto }),
+  controller.forgotPasswordEmbedded,
+);
+router.post(
+  "/o/reset-password",
+  strictAuthLimiter,
+  embeddedOriginGuard,
+  validate({ body: embeddedResetPasswordDto }),
+  controller.resetPasswordEmbedded,
 );
 router.post("/o/token", authLimiter, validate({ body: tokenDto }), controller.token);
 router.get("/o/userinfo", oidcAuthenticate, controller.userInfo);
