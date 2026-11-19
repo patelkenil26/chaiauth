@@ -1,10 +1,37 @@
 import { createCodeChallenge, randomString } from "./pkce";
 
+/**
+ * Security facts about a sign-in, delivered when the app requests the `login_context` scope.
+ * Location is derived from the IP: approximate, never a GPS position.
+ */
+export interface LoginContext {
+  event_id: string;
+  /** password | email_code | mfa | google | github ... */
+  method: string;
+  /** ISO 8601 time of the sign-in. */
+  at: string;
+  /** First time this browser + OS + country was used by this user. */
+  is_new_device: boolean;
+  ip: string | null;
+  device: { type: string; browser: string; browser_version: string | null; os: string };
+  language: string | null;
+  location: {
+    country: string | null;
+    region: string | null;
+    city: string | null;
+    timezone: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
+}
+
 export interface ChaiAuthUser {
   sub: string;
   name?: string;
   email?: string;
   email_verified?: boolean;
+  /** Only after a sign-in that requested the `login_context` scope (browser-only mode). */
+  login_context?: LoginContext;
 }
 
 export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -38,6 +65,50 @@ export interface ChaiAuthConfig {
   /** How to send the browser to the sign-in page. Defaults to `window.location.assign`. */
   navigate?: (url: string) => void;
   now?: () => number;
+}
+
+/** Everything ChaiAuth needs to resume an authorization request after the user has authenticated. */
+export interface AuthContext {
+  client_id: string;
+  redirect_uri: string;
+  scope: string;
+  state: string;
+  nonce?: string;
+  code_challenge?: string;
+  code_challenge_method?: "S256";
+}
+
+export interface PasswordCredentials {
+  /** Email address. */
+  email?: string;
+  /** Username, if the app allows it. */
+  username?: string;
+  password: string;
+}
+
+export interface EmbeddedSignInOptions {
+  /** Path on your site to return to afterwards (browser-only mode). */
+  returnTo?: string;
+  /**
+   * Backend mode: an authorization context created by YOUR server (which keeps the PKCE verifier and
+   * the client secret). The browser then hands the resulting code to your server's redirect URI.
+   * Without it, the SDK runs as a public client and finishes the sign-in in the browser.
+   */
+  context?: AuthContext;
+}
+
+/** Result of a credentials sign-in step. */
+export type SignInResult =
+  | { status: "complete"; returnTo?: string }
+  | { status: "mfa_required"; mfaToken: string; context: AuthContext };
+
+/** Shape of ChaiAuth's JSON responses (success and error). */
+interface ApiBody {
+  message?: string;
+  code?: string;
+  mfa_required?: boolean;
+  mfa_token?: string;
+  data?: { code?: string; state?: string; redirect_uri?: string } | null;
 }
 
 export class ChaiAuthError extends Error {
@@ -226,6 +297,10 @@ export class ChaiAuthClient {
         user = await this.fetchUser(fresh.accessToken);
       }
 
+      // The login context belongs to the sign-in, not the profile: carry it over from the cached user
+      const cachedContext = this.readCachedUser()?.login_context;
+      if (cachedContext) user = { ...user, login_context: cachedContext };
+
       this.storage.setItem(this.key("user"), JSON.stringify(user));
       this.setState({ status: "authenticated", user, error: null });
     } catch (err) {
@@ -255,7 +330,16 @@ export class ChaiAuthClient {
 
   private async buildAuthorizeUrl(returnTo: string | undefined): Promise<string> {
     const metadata = await this.getMetadata();
+    const context = await this.createAuthContext(returnTo);
 
+    const url = new URL(metadata.authorization_endpoint);
+    url.searchParams.set("response_type", "code");
+    for (const [key, value] of Object.entries(context)) url.searchParams.set(key, value);
+    return url.toString();
+  }
+
+  /** Fresh PKCE verifier, state and nonce for one sign-in attempt. The verifier stays in storage. */
+  private async createAuthContext(returnTo: string | undefined): Promise<Required<AuthContext>> {
     const verifier = randomString(32);
     const state = randomString(16);
     const nonce = randomString(16);
@@ -263,17 +347,120 @@ export class ChaiAuthClient {
 
     this.writePending({ state, verifier, nonce, returnTo: safeReturnTo(returnTo) });
 
-    const url = new URL(metadata.authorization_endpoint);
-    url.searchParams.set("response_type", "code");
-    url.searchParams.set("client_id", this.config.clientId);
-    url.searchParams.set("redirect_uri", this.config.redirectUri);
-    url.searchParams.set("scope", this.scope);
-    url.searchParams.set("state", state);
-    url.searchParams.set("nonce", nonce);
-    url.searchParams.set("code_challenge", challenge);
-    url.searchParams.set("code_challenge_method", "S256");
+    return {
+      client_id: this.config.clientId,
+      redirect_uri: this.config.redirectUri,
+      scope: this.scope,
+      state,
+      nonce,
+      code_challenge: challenge,
+      code_challenge_method: "S256",
+    };
+  }
 
-    return url.toString();
+  // ── Embedded sign-in (no redirect to ChaiAuth's page) ─────
+  /**
+   * Signs in with email/username + password using the app's OWN form. Throws a `ChaiAuthError` with a
+   * user-presentable message on failure. A `complete` result means signed in (browser-only mode) or
+   * that the browser is already navigating to your server's redirect URI (backend mode).
+   * `mfa_required` means the account has two-factor: collect a code and call `verifyMfa`.
+   */
+  async signInWithPassword(credentials: PasswordCredentials, options: EmbeddedSignInOptions = {}): Promise<SignInResult> {
+    return this.authorize({ ...credentials }, options);
+  }
+
+  /** Passwordless step 1: emails a 6-digit sign-in code. Always succeeds for unknown emails (no enumeration). */
+  async sendEmailCode(email: string): Promise<void> {
+    await this.post("/o/email-code", { client_id: this.config.clientId, email });
+  }
+
+  /** Passwordless step 2: signs in with the emailed code. */
+  async signInWithEmailCode(input: { email: string; code: string }, options: EmbeddedSignInOptions = {}): Promise<SignInResult> {
+    return this.authorize({ email: input.email, otp: input.code }, options);
+  }
+
+  /** Second factor: the `mfaToken` and `context` come from the `mfa_required` result. Accepts an authenticator or backup code. */
+  async verifyMfa(
+    input: { mfaToken: string; code: string; context: AuthContext },
+    options: Pick<EmbeddedSignInOptions, "returnTo"> & { backend?: boolean } = {},
+  ): Promise<SignInResult> {
+    const body = await this.post("/o/authorize/mfa", {
+      ...input.context,
+      consent_granted: true,
+      mfa_token: input.mfaToken,
+      code: input.code.trim(),
+    });
+    return this.finish(body, Boolean(options.backend));
+  }
+
+  /**
+   * Creates an account. ChaiAuth emails a verification link; the user can sign in after confirming it.
+   * `captchaToken` is the Cloudflare Turnstile token (see `<SignUpForm turnstileSiteKey>`).
+   */
+  async signUp(input: { name: string; email: string; password: string; captchaToken?: string }): Promise<string> {
+    const body = await this.post("/o/register", { client_id: this.config.clientId, ...input });
+    return body.message ?? "Account created. Check your email to verify your address.";
+  }
+
+  /** Starts a social sign-in (e.g. Google). The provider has to leave the page; you come back signed in. */
+  async signInWithProvider(provider: string, options: EmbeddedSignInOptions = {}): Promise<void> {
+    const context = options.context ?? (await this.createAuthContext(options.returnTo));
+    const url = new URL(`${this.issuer}/api/auth/providers/${encodeURIComponent(provider)}`);
+    url.searchParams.set("proxy_state", JSON.stringify(context));
+    this.navigate(url.toString());
+  }
+
+  /** First step of a credentials sign-in: PKCE context (or the server's), credentials, then finish or ask for MFA. */
+  private async authorize(credentials: Record<string, unknown>, options: EmbeddedSignInOptions): Promise<SignInResult> {
+    const backend = Boolean(options.context);
+    const context = options.context ?? (await this.createAuthContext(options.returnTo));
+
+    let body: ApiBody;
+    try {
+      body = await this.post("/o/authorize", { ...context, consent_granted: true, ...credentials }, { allowMfa: true });
+    } catch (err) {
+      if (!backend) this.clearPending();
+      throw err;
+    }
+
+    if (body.mfa_required && body.mfa_token) return { status: "mfa_required", mfaToken: body.mfa_token, context };
+    return this.finish(body, backend);
+  }
+
+  /** Turns an authorization response into a finished sign-in (or the navigation that finishes it). */
+  private async finish(body: ApiBody, backend: boolean): Promise<SignInResult> {
+    const data = body.data;
+    if (!data?.code || !data.redirect_uri) {
+      throw new ChaiAuthError("invalid_response", "The sign-in response had no authorization code.");
+    }
+    const redirect = new URL(data.redirect_uri);
+    redirect.searchParams.set("code", data.code);
+    if (data.state) redirect.searchParams.set("state", data.state);
+
+    if (backend) {
+      this.navigate(redirect.toString());
+      return { status: "complete" };
+    }
+    return { status: "complete", returnTo: await this.handleRedirect(redirect.toString()) };
+  }
+
+  /** POST JSON to a ChaiAuth endpoint; failures become a `ChaiAuthError` with the server's message. */
+  private async post(path: string, payload: Record<string, unknown>, opts: { allowMfa?: boolean } = {}): Promise<ApiBody> {
+    let res: Response;
+    try {
+      res = await this.fetchFn(`${this.issuer}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      throw new ChaiAuthError("network_error", "Could not reach the sign-in service. Check your connection and try again.");
+    }
+
+    const body = (await res.json().catch(() => ({}))) as ApiBody;
+    if (opts.allowMfa && res.status === 403 && body.mfa_required && body.mfa_token) return body;
+    if (!res.ok) throw new ChaiAuthError(body.code ?? "request_failed", body.message ?? `Request failed (${res.status}).`);
+    return body;
   }
 
   /** Completes the redirect back from ChaiAuth. Returns the `returnTo` path, if any. */
@@ -307,7 +494,11 @@ export class ChaiAuthClient {
     });
     if (tokens.idToken) await this.verifyIdToken(tokens.idToken, pending.nonce);
 
-    const user = await this.fetchUser(tokens.accessToken);
+    const loginContext = tokens.idToken ? (decodeJwtPayload(tokens.idToken).login_context as LoginContext | undefined) : undefined;
+    const user: ChaiAuthUser = {
+      ...(await this.fetchUser(tokens.accessToken)),
+      ...(loginContext && { login_context: loginContext }),
+    };
 
     this.saveTokens(tokens);
     this.storage.setItem(this.key("user"), JSON.stringify(user));

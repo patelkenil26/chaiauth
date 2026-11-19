@@ -6,6 +6,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useConsent } from "../hooks/useConsent";
 
+/** What each scope means, in words the user can judge. */
+const SCOPE_LABELS: Record<string, string> = {
+  openid: "Know that it is you (a stable account ID)",
+  profile: "Your name",
+  email: "Your email address and whether it is verified",
+  login_context: "Details of this sign-in: your device, IP address and approximate location",
+};
+
 export function ConsentScreen() {
   const searchParams = useSearchParams();
   const {
@@ -63,7 +71,9 @@ export function ConsentScreen() {
   }
 
   const appName = authData.clientName;
-  const scopesList = authData.requestedScope ? authData.requestedScope.split(" ") : ["Access your profile"];
+  const scopesList = (authData.requestedScope ? authData.requestedScope.split(" ") : ["profile"]).map(
+    (scope: string) => SCOPE_LABELS[scope] ?? scope,
+  );
 
   return (
     <div className="ca-fade-up space-y-8">

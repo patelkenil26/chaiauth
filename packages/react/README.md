@@ -70,3 +70,41 @@ pnpm --filter @chaiauth/react test         # unit tests (node:test)
 pnpm --filter @chaiauth/react check-types
 pnpm --filter @chaiauth/react build        # ESM + CJS + .d.ts in dist/
 ```
+
+## Embedded sign-in form (no redirect to ChaiAuth's page)
+
+`<SignInForm />` renders email + password (and optional social buttons) **inside your own page**, in your own theme.
+
+```tsx
+<SignInForm
+  returnTo="/dashboard"
+  providers={["google"]}
+  forgotPasswordHref="/forgot-password"
+  onSuccess={(to) => router.replace(to ?? "/dashboard")}
+  appearance={{ variables: { primary: "#65a30d", radius: "0.75rem" } }}
+/>
+```
+
+- **Theming:** unset tokens inherit your page's text colour and font. Pass `appearance.variables` (CSS variables) and/or `appearance.classNames` (Tailwind etc.). Prefer your own UI? Use `useChaiAuth().signInWithPassword()` / `signInWithProvider()`.
+- **Required console setting:** set the app's **Application URL** to the site that hosts the form (e.g. `https://forms.example.com`). ChaiAuth only accepts embedded sign-ins from that origin.
+- **Backend mode:** if your server keeps the client secret (confidential client), pass `getAuthContext` returning the context from your server. The browser posts the credentials to ChaiAuth, then navigates to your server's redirect URI with the code; your server finishes the exchange. The PKCE verifier never reaches the browser.
+- **Two-factor** accounts get a code step inside the form (authenticator or backup code). Nothing to configure.
+- **Email code** (passwordless): pass `emailCode` to `<SignInForm />` to offer "Email me a sign-in code". It is the inline replacement for magic links, which would have to leave your page.
+- **Sign-up:** `<SignUpForm turnstileSiteKey="..." />`. ChaiAuth requires the Cloudflare Turnstile check for sign-ups: add your site's domain to the widget. The user verifies their email, then signs in.
+- **Headless:** `useChaiAuth()` also exposes `signInWithEmailCode`, `sendEmailCode`, `verifyMfa` and `signUp` for fully custom UI.
+- **Not in the forms yet:** password reset (link to the hosted `/forgot-password` page) and passkeys.
+
+## Login context (device, IP, approximate location)
+
+Add the `login_context` scope and every sign-in comes with the security facts, so you never write device or location detection yourself:
+
+```tsx
+<ChaiAuthProvider scope="openid profile email login_context" ... />
+
+const { user } = useChaiAuth();
+user?.login_context?.device.browser;     // "Chrome"
+user?.login_context?.location.city;      // "Pune"  (from the IP: approximate, not GPS)
+user?.login_context?.is_new_device;      // true the first time this browser + OS + country is seen
+```
+
+It is a signed claim of the ID token (`login_context`), delivered to your server in backend mode. Store it with `event_id` as a unique key. ChaiAuth also keeps its own login history and emails the user about sign-ins from unfamiliar devices. Full field list: the *Login context* section of the ChaiAuth docs.

@@ -1,31 +1,11 @@
 import type { Request } from "express";
-import { UAParser } from "ua-parser-js";
 import { db, eq, and, desc } from "@repo/database";
 import { sessionsTable, usersTable, type SelectSession } from "@repo/database/schema";
 import { ApiError } from "../../../common/errors/api-error";
 import { emailService } from "../../../common/email/email.service";
 import { hashToken } from "../../../common/utils/crypto";
-import { getClientIp } from "../../../common/utils/request";
+import { describeLocation, getClientContext } from "../../../common/utils/client-context";
 import { runSafely } from "../../../common/utils/safe-async";
-
-interface DeviceInfo {
-  browser: string;
-  browserVersion: string | null;
-  os: string;
-  device: "Desktop" | "Mobile" | "Tablet";
-}
-
-const parseUserAgent = (userAgent: string | undefined): DeviceInfo => {
-  if (!userAgent) return { browser: "Unknown", browserVersion: null, os: "Unknown", device: "Desktop" };
-
-  const { browser, os, device } = new UAParser(userAgent).getResult();
-  return {
-    browser: browser.name ?? "Unknown",
-    browserVersion: browser.version ?? null,
-    os: os.name ? `${os.name}${os.version ? ` ${os.version}` : ""}` : "Unknown",
-    device: device.type === "mobile" ? "Mobile" : device.type === "tablet" ? "Tablet" : "Desktop",
-  };
-};
 
 /** Session as returned to the client: the token hash never leaves the server. */
 export type PublicSession = Omit<SelectSession, "tokenHash"> & { isCurrent: boolean };
@@ -54,8 +34,9 @@ export const sessionsService = {
   /** Records a new login session and alerts the user if it comes from an unfamiliar device. */
   async createSession(params: { userId: string; refreshToken: string; req: Request }) {
     const { userId, refreshToken, req } = params;
-    const device = parseUserAgent(req.headers["user-agent"]);
-    const ip = getClientIp(req);
+    const context = getClientContext(req);
+    const { ip } = context;
+    const device = context;
 
     if (await isNewDevice(userId, ip, device.browser)) {
       const [user] = await db
@@ -67,7 +48,7 @@ export const sessionsService = {
           "Suspicious login email",
           emailService.sendSuspiciousLoginEmail(user.email, {
             device: `${device.browser} on ${device.os}`,
-            location: ip ?? "Unknown IP",
+            location: describeLocation(context) ?? ip ?? "Unknown location",
             time: new Date().toUTCString(),
           }),
         );
@@ -83,6 +64,8 @@ export const sessionsService = {
         os: device.os,
         device: device.device,
         ip,
+        city: context.city,
+        country: context.country,
         tokenHash: hashToken(refreshToken),
       })
       .returning();

@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { emailField, nameField, passwordField } from "../../common/schemas/fields";
 import { loginFieldsShape, withLoginRules } from "../auth/dto/login.dto";
+import { mfaCodeField } from "../auth/mfa/mfa.dto";
 
 /**
  * Redirect URIs must be https (http only for localhost development) and must not carry a fragment.
@@ -41,6 +43,32 @@ export const authorizeSubmitDto = withLoginRules(
   }),
 );
 export type AuthorizeSubmitInput = z.infer<typeof authorizeSubmitDto>;
+
+// ── Embedded sign-in extras (an app's own form; see embedded-cors.middleware.ts) ──
+/** Second step when the account has two-factor authentication. */
+export const authorizeMfaDto = z.object({
+  ...oidcAuthContextSchema.shape,
+  mfa_token: z.string().min(1).max(2048),
+  code: mfaCodeField,
+  consent_granted: z.boolean(),
+});
+export type AuthorizeMfaInput = z.infer<typeof authorizeMfaDto>;
+
+/** Sign-up from an app's own form. The role is never client-controlled: always a normal user. */
+export const embeddedRegisterDto = z.object({
+  client_id: z.string().min(1).max(255),
+  name: nameField,
+  email: emailField,
+  password: passwordField,
+});
+export type EmbeddedRegisterInput = z.infer<typeof embeddedRegisterDto>;
+
+/** Passwordless: emails a 6-digit sign-in code. */
+export const embeddedEmailCodeDto = z.object({
+  client_id: z.string().min(1).max(255),
+  email: emailField,
+});
+export type EmbeddedEmailCodeInput = z.infer<typeof embeddedEmailCodeDto>;
 
 // ── Token endpoint ──────────────────────────────────────────
 const clientAuthFields = {

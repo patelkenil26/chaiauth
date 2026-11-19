@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
+import type { Request } from "express";
 import type { SelectClient } from "@repo/database/schema";
-import { ApiError } from "../../common/errors/api-error";
+import { ApiError, ERROR_CODES } from "../../common/errors/api-error";
 import { redis } from "../../common/config/redis";
 import { generateToken, hashToken, safeEqual } from "../../common/utils/crypto";
 import { days } from "../../common/utils/duration";
@@ -11,11 +12,25 @@ import {
 import { authService } from "../auth/auth.service";
 import { userRepository } from "../auth/user.repository";
 import { clientRepository } from "./client.repository";
+import { getClientContext } from "../../common/utils/client-context";
 import { clientService } from "./client.service";
-import type { AuthorizeSubmitInput, OidcAuthContext, TokenInput } from "./oidc.dto";
+import { loginEventsService, toLoginContextClaim, type LoginContextClaim } from "./login-events.service";
+import { mfaService } from "../auth/mfa/mfa.service";
+import type {
+  AuthorizeMfaInput,
+  AuthorizeSubmitInput,
+  EmbeddedEmailCodeInput,
+  EmbeddedRegisterInput,
+  OidcAuthContext,
+  TokenInput,
+} from "./oidc.dto";
 import { oauthError } from "./oidc.errors";
 
-export const SUPPORTED_SCOPES = ["openid", "profile", "email"] as const;
+/**
+ * `login_context` is opt-in: the ID token then carries the device / IP / approximate location of this
+ * sign-in (see login-events.service.ts), so apps do not have to collect it themselves.
+ */
+export const SUPPORTED_SCOPES = ["openid", "profile", "email", "login_context"] as const;
 
 const AUTH_CODE_TTL_SEC = 60;
 const REFRESH_TOKEN_TTL_SEC = days(7) / 1000;
@@ -32,6 +47,8 @@ interface StoredAuthCode {
   scope: string;
   codeChallenge?: string;
   nonce?: string;
+  /** Present only when the app asked for the `login_context` scope. */
+  loginContext?: LoginContextClaim;
 }
 
 interface StoredRefreshToken {
@@ -84,8 +101,10 @@ const issueTokens = async (params: {
   scope: string;
   nonce?: string;
   isPublicClient: boolean;
+  /** Only on the authorization-code exchange (a refresh is not a new sign-in). */
+  loginContext?: LoginContextClaim;
 }): Promise<TokenResponse> => {
-  const { userId, clientId, scope, nonce, isPublicClient } = params;
+  const { userId, clientId, scope, nonce, isPublicClient, loginContext } = params;
 
   const user = await userRepository.findById(userId);
   if (!user || user.deletedAt) throw oauthError(400, "invalid_grant", "User no longer exists");
@@ -95,7 +114,7 @@ const issueTokens = async (params: {
   await redis.set(refreshTokenKey(refreshToken), JSON.stringify(stored), "EX", REFRESH_TOKEN_TTL_SEC);
 
   return {
-    id_token: generateOidcIdToken(userId, clientId, nonce),
+    id_token: generateOidcIdToken(userId, clientId, nonce, loginContext ? { login_context: loginContext } : {}),
     access_token: generateOidcAccessToken(userId, clientId, scope),
     refresh_token: refreshToken,
     token_type: "Bearer",
@@ -106,12 +125,27 @@ const issueTokens = async (params: {
 
 export const oidcService = {
   /** Mints a short-lived, single-use authorization code for an already-authenticated user. */
-  async createAuthorizationCode(params: { userId: string; context: OidcAuthContext }) {
-    const { userId, context } = params;
+  async createAuthorizationCode(params: {
+    userId: string;
+    context: OidcAuthContext;
+    /** The sign-in request: its IP, browser and language are recorded as a login event. */
+    req: Request;
+    /** password | email_code | mfa | google | github ... */
+    method: string;
+  }) {
+    const { userId, context, req, method } = params;
     const client = await clientService.verifyForAuthorization(context.client_id, context.redirect_uri);
     const scope = normalizeScope(context.scope);
 
     await clientRepository.upsertConsent(userId, client.clientId, scope);
+
+    const event = await loginEventsService.record({
+      userId,
+      clientId: client.clientId,
+      clientName: client.displayName,
+      method,
+      context: getClientContext(req),
+    });
 
     const { rawToken: code } = generateToken(32);
     const stored: StoredAuthCode = {
@@ -121,6 +155,7 @@ export const oidcService = {
       scope,
       codeChallenge: context.code_challenge,
       nonce: context.nonce,
+      ...(event && scope.split(" ").includes("login_context") && { loginContext: toLoginContextClaim(event) }),
     };
     await redis.set(authCodeKey(code), JSON.stringify(stored), "EX", AUTH_CODE_TTL_SEC);
 
@@ -128,7 +163,7 @@ export const oidcService = {
   },
 
   /** Login form on the authorize page: verify credentials + consent, then issue the code. */
-  async authorizeWithCredentials(input: AuthorizeSubmitInput) {
+  async authorizeWithCredentials(input: AuthorizeSubmitInput, req: Request) {
     if (!input.consent_granted) {
       throw oauthError(403, "access_denied", "User denied the consent request");
     }
@@ -137,12 +172,47 @@ export const oidcService = {
     const outcome = await authService.login({ email, username, phone, password, otp });
 
     if (outcome.status === "mfa_required") {
-      throw ApiError.forbidden(
-        "This account uses two-factor authentication. Sign in with a method that supports it (passkey or social login).",
+      // Embedded forms read `mfa_required` + `mfa_token` and ask for the code (POST /o/authorize/mfa).
+      // The hosted page just shows the message.
+      throw new ApiError(
+        403,
+        "Two-factor authentication is required. Enter the code from your authenticator app.",
+        ERROR_CODES.FORBIDDEN,
+        undefined,
+        { mfa_required: true, mfa_token: outcome.mfaToken },
       );
     }
 
-    return this.createAuthorizationCode({ userId: outcome.user.id, context });
+    return this.createAuthorizationCode({
+      userId: outcome.user.id,
+      context,
+      req,
+      method: input.otp ? "email_code" : "password",
+    });
+  },
+
+  /** Second factor of an embedded sign-in: MFA challenge token + TOTP/backup code in, authorization code out. */
+  async authorizeWithMfa(input: AuthorizeMfaInput, req: Request) {
+    if (!input.consent_granted) {
+      throw oauthError(403, "access_denied", "User denied the consent request");
+    }
+    const { mfa_token, code, consent_granted: _consent, ...context } = input;
+    const user = await mfaService.completeLogin(mfa_token, code);
+    return this.createAuthorizationCode({ userId: user.id, context, req, method: "mfa" });
+  },
+
+  /** Sign-up from an app's own form. Verification still happens by email before the first login. */
+  async registerEmbedded(input: EmbeddedRegisterInput) {
+    const client = await clientRepository.findByClientId(input.client_id);
+    if (!client) throw ApiError.notFound("Client not found");
+    await authService.register({ name: input.name, email: input.email, password: input.password, role: "customer" });
+  },
+
+  /** Emails a one-time sign-in code. Always succeeds (no user enumeration). */
+  async sendEmailCode(input: EmbeddedEmailCodeInput) {
+    const client = await clientRepository.findByClientId(input.client_id);
+    if (!client) throw ApiError.notFound("Client not found");
+    await authService.sendOtp({ email: input.email });
   },
 
   /** Token endpoint: authorization_code and refresh_token grants. */

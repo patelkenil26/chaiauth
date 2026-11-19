@@ -56,8 +56,14 @@ export const verifyMfaToken = (token: string) =>
   }) as MfaTokenPayload;
 
 // ── OIDC tokens (RS256) ─────────────────────────────────────
-export const generateOidcIdToken = (userId: string, clientId: string, nonce?: string) =>
-  jwt.sign({ sub: userId, aud: clientId, ...(nonce && { nonce }) }, getSigningKeys().privateKey, {
+export const generateOidcIdToken = (
+  userId: string,
+  clientId: string,
+  nonce?: string,
+  /** Extra claims, e.g. `login_context`. Registered claims (sub, aud, ...) cannot be overridden. */
+  extraClaims: Record<string, unknown> = {},
+) =>
+  jwt.sign({ ...extraClaims, sub: userId, aud: clientId, ...(nonce && { nonce }) }, getSigningKeys().privateKey, {
     algorithm: "RS256",
     expiresIn: OIDC_TOKEN_TTL,
     issuer: config.jwt.issuer,

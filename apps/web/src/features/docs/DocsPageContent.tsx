@@ -24,6 +24,7 @@ const NAV = [
       { id: "authorization-flow", label: "Authorization flow" },
       { id: "token-exchange", label: "Token exchange" },
       { id: "react-sdk", label: "React SDK" },
+      { id: "embedded-sign-in", label: "Embedded sign-in forms" },
     ],
   },
   {
@@ -32,6 +33,7 @@ const NAV = [
       { id: "endpoints", label: "Endpoints" },
       { id: "server-api", label: "Server API & keys" },
       { id: "scopes", label: "Scopes & claims" },
+      { id: "login-context", label: "Login context" },
       { id: "security-notes", label: "Security notes" },
     ],
   },
@@ -129,7 +131,8 @@ export const authOptions = {
 
 export default NextAuth(authOptions);`;
 
-  const { sdkProviderCode, sdkUsageCode, apiKeyCode, apiKeyResponse } = buildSnippets(backendHost, frontendHost);
+  const { sdkProviderCode, sdkUsageCode, embeddedFormsCode, embeddedBackendCode, loginContextCode, apiKeyCode, apiKeyResponse } =
+    buildSnippets(backendHost, frontendHost);
 
   // Scroll spy + reading progress
   useEffect(() => {
@@ -374,6 +377,43 @@ export default NextAuth(authOptions);`;
             <code className="ca-mono text-primary">packages/react</code>) until it is published to npm.
           </Callout>
 
+          <H2
+            id="embedded-sign-in"
+            sub="Like Clerk: the form lives in your own page and theme. Your users never see a ChaiAuth screen."
+          >
+            Embedded sign-in forms
+          </H2>
+          <Reveal className="mt-6 space-y-5">
+            <CodeBlock label="login.tsx" code={embeddedFormsCode} />
+          </Reveal>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {[
+              ["Sign in", "Email + password, optional email code (passwordless) and social buttons."],
+              ["Two-factor", "Accounts with an authenticator app get a code step inside the form automatically."],
+              ["Sign up", "Name, email and password with the Cloudflare Turnstile anti-bot check. The user verifies their email, then signs in."],
+              ["Theming", "Unset tokens inherit your page's colour and font. Pass appearance.variables (CSS variables) or appearance.classNames (Tailwind)."],
+            ].map(([t, d]) => (
+              <div key={t} className="ca-glass rounded-2xl p-5">
+                <div className="text-sm font-semibold text-foreground">{t}</div>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{d}</p>
+              </div>
+            ))}
+          </div>
+          <Callout>
+            <strong>Required:</strong> set your app&apos;s <em>Application URL</em> in the developer console to the site that
+            hosts the form (for example <code className="ca-mono text-primary">https://yourapp.com</code>). ChaiAuth only accepts
+            embedded sign-ins from that origin. Also add the same domain to your Turnstile widget for sign-up.
+          </Callout>
+          <h3 className="mt-8 text-lg font-semibold text-foreground">Keep the client secret on your server (recommended)</h3>
+          <Reveal className="mt-4 space-y-5">
+            <CodeBlock label="backend mode" code={embeddedBackendCode} />
+          </Reveal>
+          <Callout>
+            Without <code className="ca-mono text-primary">getAuthContext</code> the SDK runs as a public client and finishes
+            the sign-in in the browser (PKCE only). With it, your server owns the PKCE verifier and client secret, and the browser
+            only ever holds a one-time code. Passwords go from the browser straight to ChaiAuth and never touch your server.
+          </Callout>
+
           <H2 id="endpoints" sub={`Base URL: ${backendHost}`}>Endpoints</H2>
           <Reveal className="mt-6">
             <div className="ca-glass divide-y divide-border overflow-hidden rounded-2xl">
@@ -381,6 +421,10 @@ export default NextAuth(authOptions);`;
                 ["GET", "/.well-known/openid-configuration", "OpenID provider metadata"],
                 ["GET", "/.well-known/jwks.json", "Public keys to verify ID tokens (RS256)"],
                 ["GET", "/o/authorize", "Validate an authorization request"],
+                ["POST", "/o/authorize", "Embedded sign-in: credentials in, authorization code out"],
+                ["POST", "/o/authorize/mfa", "Embedded sign-in: second factor (authenticator or backup code)"],
+                ["POST", "/o/register", "Embedded sign-up (needs a Turnstile token)"],
+                ["POST", "/o/email-code", "Embedded passwordless: email a 6-digit sign-in code"],
                 ["POST", "/o/token", "Exchange a code or refresh token for tokens"],
                 ["GET", "/o/userinfo", "Read approved profile claims (Bearer token)"],
                 ["POST", "/o/revoke", "Revoke a token"],
@@ -400,11 +444,12 @@ export default NextAuth(authOptions);`;
             Scopes &amp; claims
           </H2>
           <Reveal className="mt-6">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 ["openid", "Required for OIDC. Returns an ID token with the sub claim."],
                 ["profile", "The user's name."],
                 ["email", "The user's email and email_verified."],
+                ["login_context", "Device, IP and approximate location of each sign-in, in the ID token."],
               ].map(([s, d]) => (
                 <div key={s} className="ca-glass rounded-2xl p-5">
                   <code className="ca-mono rounded-md bg-primary/12 px-2 py-1 text-xs text-[var(--chai-soft)]">{s}</code>
@@ -413,6 +458,26 @@ export default NextAuth(authOptions);`;
               ))}
             </div>
           </Reveal>
+
+          <H2
+            id="login-context"
+            sub="Every sign-in is recorded and the facts are handed to your app, so you never write device or location detection yourself."
+          >
+            Login context
+          </H2>
+          <Reveal className="mt-6 space-y-5">
+            <CodeBlock label="ID token" code={loginContextCode} />
+          </Reveal>
+          <Callout>
+            <strong>What it is:</strong> the sign-in request&apos;s IP, browser, OS, device type and language, plus a location
+            looked up from the IP in an offline database (the IP is never sent to a third party). Location is approximate, city
+            level at best, and not a GPS position. <strong>What ChaiAuth does with it:</strong> keeps a login history per user
+            and emails them when a sign-in comes from an unfamiliar browser, OS and country combination.{" "}
+            <strong>What you do:</strong> store it in your own database (use <code className="ca-mono text-primary">event_id</code>{" "}
+            as a unique key so a replayed callback cannot add a duplicate), show it in your account-security page, or step up
+            verification when <code className="ca-mono text-primary">is_new_device</code> is true. In browser-only mode the SDK
+            exposes it as <code className="ca-mono text-primary">user.login_context</code>. Only request the scope if you need it.
+          </Callout>
 
           <H2
             id="server-api"

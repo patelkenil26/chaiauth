@@ -59,5 +59,77 @@ curl "${backendHost}/v1/users/USER_ID" \\
   }
 }`;
 
-  return { sdkProviderCode, sdkUsageCode, apiKeyCode, apiKeyResponse };
+  const embeddedFormsCode = `import { SignInForm, SignUpForm } from "@chaiauth/react";
+
+// Rendered INSIDE your own page and theme: the user never visits ChaiAuth.
+export function LoginPage() {
+  return (
+    <SignInForm
+      returnTo="/dashboard"
+      providers={["google"]}          // optional social buttons
+      emailCode                       // optional "email me a code" (passwordless)
+      forgotPasswordHref="${frontendHost}/forgot-password"
+      onSuccess={(to) => router.replace(to ?? "/dashboard")}
+      appearance={{ variables: { primary: "#65a30d", radius: "0.75rem" } }}
+    />
+  );
+}
+
+export function SignupPage() {
+  return <SignUpForm turnstileSiteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} />;
+}
+
+// Prefer your own UI? Same flows as hooks:
+// const { signInWithPassword, sendEmailCode, signInWithEmailCode, verifyMfa, signUp } = useChaiAuth();`;
+
+  const embeddedBackendCode = `// 1. Your SERVER starts the sign-in. It keeps the PKCE verifier and client secret.
+app.get("/auth/chaiauth/start", async (req, res) => {
+  const state = randomUrlSafe(24), nonce = randomUrlSafe(24), verifier = randomUrlSafe(48);
+  res.cookie("chaiauth-flow", sign({ state, nonce, verifier }), { httpOnly: true, sameSite: "lax" });
+  res.json({
+    context: {
+      client_id: CLIENT_ID,
+      redirect_uri: "https://yourapp.com/auth/chaiauth/callback",
+      scope: "openid profile email login_context",
+      state, nonce,
+      code_challenge: sha256Base64Url(verifier),
+      code_challenge_method: "S256",
+    },
+  });
+});
+
+// 2. Your page passes that context to the SDK. The browser posts the credentials straight to ChaiAuth,
+//    then navigates to your callback with the code. Your server finishes the exchange (see "Token exchange").
+<SignInForm getAuthContext={() => fetch("/auth/chaiauth/start", { credentials: "include" }).then((r) => r.json()).then((j) => j.context)} />`;
+
+  const loginContextCode = `// Request the scope...
+scope=openid profile email login_context
+
+// ...and the ID token (signed, RS256) carries this claim:
+{
+  "sub": "8f14e45f-ceea-4f67-9c1e-2b9d3a6b1c7e",
+  "login_context": {
+    "event_id": "5b1c1f06-6d7e-4c2f-9a53-0f2f6d0f9a11",
+    "method": "password",                 // password | email_code | mfa | google | github
+    "at": "2026-11-19T10:15:42.000Z",
+    "is_new_device": false,               // first time this browser + OS + country for this user
+    "ip": "203.0.113.9",
+    "device": { "type": "Mobile", "browser": "Chrome", "browser_version": "124.0", "os": "Android 14" },
+    "language": "en-IN",
+    "location": {                         // from the IP: approximate, NOT a GPS position
+      "country": "IN", "region": "MH", "city": "Pune", "timezone": "Asia/Kolkata",
+      "latitude": 18.5196, "longitude": 73.8553
+    }
+  }
+}`;
+
+  return {
+    sdkProviderCode,
+    sdkUsageCode,
+    embeddedFormsCode,
+    embeddedBackendCode,
+    loginContextCode,
+    apiKeyCode,
+    apiKeyResponse,
+  };
 }

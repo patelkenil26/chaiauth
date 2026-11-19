@@ -15,6 +15,7 @@ import { globalLimiter } from "./common/middleware/rate-limiter.middleware";
 import { errorHandler, notFoundHandler } from "./common/middleware/error.middleware";
 import authRoutes from "./modules/auth/auth.routes";
 import oidcRoutes from "./modules/oidc/oidc.routes";
+import { embeddedPreflight } from "./modules/oidc/embedded-cors.middleware";
 import apiKeyRoutes from "./modules/api-keys/api-keys.routes";
 
 export const app = express();
@@ -38,6 +39,9 @@ const oidcPublicCors = cors({ origin: "*", credentials: false });
 app.use((req, res, next) =>
   OIDC_PUBLIC_PATHS.some((p) => req.path.startsWith(p)) ? oidcPublicCors(req, res, next) : next(),
 );
+
+// Embedded sign-in forms on an app's own site: answer the preflight for their POST endpoints
+app.options(["/o/authorize", "/o/authorize/mfa", "/o/register", "/o/email-code"], embeddedPreflight);
 
 app.use(
   cors({

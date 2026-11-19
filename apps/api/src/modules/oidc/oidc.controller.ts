@@ -5,7 +5,15 @@ import { getPublicJwk } from "../../common/utils/jwks";
 import type { BodyRequest } from "../../common/utils/request";
 import { userRepository } from "../auth/user.repository";
 import { clientService } from "./client.service";
-import type { AuthorizeQuery, AuthorizeSubmitInput, RevokeInput, TokenInput } from "./oidc.dto";
+import type {
+  AuthorizeMfaInput,
+  AuthorizeQuery,
+  AuthorizeSubmitInput,
+  EmbeddedEmailCodeInput,
+  EmbeddedRegisterInput,
+  RevokeInput,
+  TokenInput,
+} from "./oidc.dto";
 import { oauthError } from "./oidc.errors";
 import { SUPPORTED_SCOPES, normalizeScope, oidcService } from "./oidc.service";
 
@@ -27,7 +35,7 @@ export const getOpenIdConfiguration = (_req: Request, res: Response) => {
     subject_types_supported: ["public"],
     id_token_signing_alg_values_supported: ["RS256"],
     scopes_supported: SUPPORTED_SCOPES,
-    claims_supported: ["sub", "name", "email", "email_verified"],
+    claims_supported: ["sub", "name", "email", "email_verified", "login_context"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["client_secret_post", "none"],
   });
@@ -61,12 +69,34 @@ export const authorize = async (req: Request, res: Response) => {
 
 /** POST /o/authorize: credentials + consent in, authorization code out. */
 export const authorizeSubmit = async (req: BodyRequest<AuthorizeSubmitInput>, res: Response) => {
-  const result = await oidcService.authorizeWithCredentials(req.body);
+  const result = await oidcService.authorizeWithCredentials(req.body, req);
   ApiResponse.ok(res, "Login Successful. Redirecting to client...", {
     code: result.code,
     redirect_uri: result.redirectUri,
     state: result.state,
   });
+};
+
+/** POST /o/authorize/mfa: second factor for an embedded sign-in. */
+export const authorizeMfa = async (req: BodyRequest<AuthorizeMfaInput>, res: Response) => {
+  const result = await oidcService.authorizeWithMfa(req.body, req);
+  ApiResponse.ok(res, "Login Successful. Redirecting to client...", {
+    code: result.code,
+    redirect_uri: result.redirectUri,
+    state: result.state,
+  });
+};
+
+/** POST /o/register: sign-up from an app's own form. */
+export const registerEmbedded = async (req: BodyRequest<EmbeddedRegisterInput>, res: Response) => {
+  await oidcService.registerEmbedded(req.body);
+  ApiResponse.created(res, "Account created. Check your email to verify your address, then sign in.");
+};
+
+/** POST /o/email-code: emails a one-time sign-in code (passwordless). */
+export const sendEmailCode = async (req: BodyRequest<EmbeddedEmailCodeInput>, res: Response) => {
+  await oidcService.sendEmailCode(req.body);
+  ApiResponse.ok(res, "If an account exists for this email, a sign-in code has been sent.");
 };
 
 /** POST /o/token: RFC 6749 token response (not wrapped in our envelope). */

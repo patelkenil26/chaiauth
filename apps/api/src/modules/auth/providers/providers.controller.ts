@@ -98,7 +98,12 @@ export const providerCallback = async (
     // OIDC flow: finish the pending "Login with ChaiAuth" request
     const oidcContext = ssoProxyId ? await takeOidcContext(ssoProxyId) : null;
     if (oidcContext) {
-      const result = await oidcService.createAuthorizationCode({ userId: user.id, context: oidcContext });
+      const result = await oidcService.createAuthorizationCode({
+        userId: user.id,
+        context: oidcContext,
+        req,
+        method: req.params.provider,
+      });
       const target = new URL(result.redirectUri);
       target.searchParams.set("code", result.code);
       if (result.state) target.searchParams.set("state", result.state);

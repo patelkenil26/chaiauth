@@ -3,3 +3,4 @@ export * from "./models/oauth-account";
 export * from "./models/passkey";
 export * from "./models/session";
 export * from "./models/oidc";
+export * from "./models/login-event";
