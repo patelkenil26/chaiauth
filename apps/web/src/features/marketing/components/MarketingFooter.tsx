@@ -33,9 +33,7 @@ export function MarketingFooter() {
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} ChaiAuth. All rights reserved.</p>
-          <p className="inline-flex items-center gap-2">
-            <span className="ca-dot-live" /> All systems operational
-          </p>
+          <p>Built on OpenID Connect</p>
         </div>
       </div>
     </footer>

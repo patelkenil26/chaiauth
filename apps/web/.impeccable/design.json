@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-23T00:00:00.000Z",
+  "title": "Design System: ChaiAuth",
+  "extensions": {
+    "colorMeta": {
+      "masala-amber": {
+        "role": "primary",
+        "displayName": "Masala Amber",
+        "canonical": "oklch(0.6 0.18 46)",
+        "tonalRamp": ["oklch(0.25 0.06 46)", "oklch(0.35 0.1 46)", "oklch(0.45 0.14 46)", "oklch(0.6 0.18 46)", "oklch(0.7 0.15 48)", "oklch(0.8 0.1 52)", "oklch(0.89 0.06 60)", "oklch(0.95 0.025 70)"]
+      },
+      "milk-cream": {
+        "role": "neutral",
+        "displayName": "Milk Cream",
+        "canonical": "oklch(0.975 0.012 80)",
+        "tonalRamp": ["oklch(0.22 0.02 50)", "oklch(0.38 0.022 55)", "oklch(0.5 0.022 60)", "oklch(0.7 0.02 68)", "oklch(0.84 0.018 74)", "oklch(0.89 0.018 75)", "oklch(0.955 0.014 78)", "oklch(0.975 0.012 80)"]
+      },
+      "obsidian": {
+        "role": "neutral",
+        "displayName": "Obsidian",
+        "canonical": "oklch(0.125 0.005 55)",
+        "tonalRamp": ["oklch(0.105 0.004 55)", "oklch(0.125 0.005 55)", "oklch(0.145 0.005 55)", "oklch(0.165 0.006 55)", "oklch(0.2 0.007 55)", "oklch(0.24 0.012 55)", "oklch(0.69 0.01 62)", "oklch(0.955 0.006 70)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Marketing hero headline only." },
+      "headline": { "displayName": "Headline", "purpose": "Section and page titles." },
+      "title": { "displayName": "Title", "purpose": "Card and feature titles." },
+      "body": { "displayName": "Body", "purpose": "Interface text and descriptions." },
+      "label": { "displayName": "Label", "purpose": "Mono micro-labels: stat captions, eyebrows, technical tags." }
+    },
+    "shadows": [
+      { "name": "card", "value": "inset 0 1px 0 oklch(0.22 0.02 50 / 7%), 0 1px 2px oklch(0.38 0.06 55 / 11%), 0 24px 60px -34px oklch(0.38 0.06 55 / 28%)", "purpose": "L1 cards, light mode." },
+      { "name": "raised", "value": "inset 0 1px 0 oklch(0.22 0.02 50 / 9%), 0 2px 4px oklch(0.38 0.06 55 / 13%), 0 32px 70px -28px oklch(0.38 0.06 55 / 28%)", "purpose": "L2 raised surfaces." },
+      { "name": "sunken", "value": "inset 0 2px 6px oklch(0.38 0.06 55 / 10%)", "purpose": "Input wells and code areas." },
+      { "name": "cta-glow", "value": "0 12px 28px -14px oklch(0.62 0.19 45 / 75%)", "purpose": "Primary button glow, light mode only." }
+    ],
+    "motion": [
+      { "name": "ease-out-soft", "value": "cubic-bezier(.2, .7, .2, 1)", "purpose": "Default easing for lifts, reveals and button presses." },
+      { "name": "press", "value": ".06s", "purpose": "Active-state press duration." },
+      { "name": "reveal", "value": ".85s", "purpose": "Scroll reveal of marketing sections." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action on a screen. Chai gradient with a lift on hover.",
+      "html": "<button class=\"ds-btn-primary\">Get started free</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px; border: 0; border-radius: .85rem; font-weight: 600; font-size: .9rem; cursor: pointer; color: oklch(0.99 0.01 80); background: linear-gradient(105deg, oklch(0.74 0.14 66) 0%, oklch(0.68 0.17 54) 34%, oklch(0.62 0.19 45) 66%, oklch(0.52 0.17 38) 100%); box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%), 0 12px 28px -14px oklch(0.62 0.19 45 / 75%); transition: transform .15s cubic-bezier(.2,.7,.2,1), box-shadow .25s ease; } .ds-btn-primary:hover { transform: translateY(-2px); } .ds-btn-primary:active { transform: scale(.97); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.6 0.18 46); outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action next to a primary button.",
+      "html": "<button class=\"ds-btn-ghost\">Read the docs</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 18px; border-radius: .85rem; font-weight: 600; font-size: .9rem; cursor: pointer; color: oklch(0.22 0.02 50); background: oklch(0.95 0.016 78 / 75%); border: 1px solid oklch(0.89 0.018 75); transition: background-color .2s ease, border-color .2s ease; } .ds-btn-ghost:hover { background: oklch(0.93 0.035 68); border-color: oklch(0.8 0.06 55); } .ds-btn-ghost:focus-visible { outline: 2px solid oklch(0.6 0.18 46); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Sunken field that rises and glows amber on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"you@example.com\" />",
+      "css": ".ds-input { width: 100%; height: 44px; padding: 0 .95rem; border-radius: .85rem; font: inherit; font-size: .92rem; color: oklch(0.22 0.02 50); background: oklch(0.955 0.014 78 / 85%); border: 1px solid oklch(0.89 0.018 75); box-shadow: inset 0 1px 2px oklch(0.38 0.06 55 / 9%); transition: border-color .15s, box-shadow .25s, background-color .2s; } .ds-input:hover { border-color: oklch(0.8 0.06 55); } .ds-input:focus { outline: none; border-color: oklch(0.6 0.18 46 / 85%); background: oklch(1 0.003 80); box-shadow: 0 0 0 4px oklch(0.6 0.18 46 / 18%); }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Level-1 container with a warm hairline and soft shadow.",
+      "html": "<div class=\"ds-card\"><h3>Passkeys</h3><p>Sign in with a fingerprint or device.</p></div>",
+      "css": ".ds-card { padding: 24px; border-radius: 1.15rem; color: oklch(0.22 0.02 50); background: oklch(0.992 0.006 80 / 80%); border: 1px solid oklch(0.89 0.018 75); box-shadow: inset 0 1px 0 oklch(0.22 0.02 50 / 7%), 0 24px 60px -34px oklch(0.38 0.06 55 / 28%); } .ds-card h3 { margin: 0 0 8px; font-family: Sora, sans-serif; font-size: 1.125rem; font-weight: 600; letter-spacing: -.025em; } .ds-card p { margin: 0; font-size: .875rem; line-height: 1.6; color: oklch(0.5 0.022 60); }"
+    },
+    {
+      "name": "Nav Link (active)",
+      "kind": "nav",
+      "refersTo": "card",
+      "description": "Sidebar row. The active item gets an amber wash and a chai bar on its left edge.",
+      "html": "<a class=\"ds-nav-link\" aria-current=\"page\">Security</a>",
+      "css": ".ds-nav-link { position: relative; display: flex; align-items: center; height: 42px; padding: 0 .85rem; border-radius: .8rem; font-size: .875rem; font-weight: 500; text-decoration: none; color: oklch(0.22 0.02 50); background: linear-gradient(90deg, oklch(0.6 0.18 46 / 16%), transparent); } .ds-nav-link::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px; border-radius: 9999px; background: linear-gradient(105deg, oklch(0.74 0.14 66), oklch(0.52 0.17 38)); }"
+    },
+    {
+      "name": "Eyebrow",
+      "kind": "chip",
+      "refersTo": "button-ghost",
+      "description": "Small section label with an optional live dot.",
+      "html": "<span class=\"ds-eyebrow\"><span class=\"ds-dot\"></span>OpenID Connect · Passkeys · MFA</span>",
+      "css": ".ds-eyebrow { display: inline-flex; align-items: center; gap: .5rem; padding: .3rem .75rem; border-radius: 9999px; font-size: .75rem; font-weight: 600; letter-spacing: .02em; color: oklch(0.6 0.18 46); border: 1px solid oklch(0.78 0.08 55); background: oklch(0.6 0.18 46 / 9%); } .ds-dot { width: .45rem; height: .45rem; border-radius: 9999px; background: oklch(0.55 0.13 152); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Warm Ledger",
+    "overview": "ChaiAuth is a record-keeper that happens to be friendly. Every screen answers a question of trust (who is signing in, what is being approved, which session is live), and answers it in a warm voice. The system pairs precise structure with the material warmth of cream paper, chai-brown ink and a single spiced accent.",
+    "keyCharacteristics": [
+      "Warm neutrals tinted toward amber; no pure white or pure black surfaces.",
+      "One accent (Masala Amber), spent sparingly.",
+      "Tactile controls that lift on hover and press down on click.",
+      "Mono, uppercase micro-labels for technical facts (endpoints, status, counts).",
+      "Two distinct theme personalities that share one structure."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Masala Amber and the chai gradient are the only saturated colors on a screen. Status colors appear only when they carry status.", "section": "colors" },
+      { "name": "The Tinted Neutral Rule", "body": "Every neutral leans toward amber (hue 50–80). Never introduce a cold gray or pure #fff/#000 surface.", "section": "colors" },
+      { "name": "The Mono-For-Machines Rule", "body": "Anything a developer might copy (endpoints, client IDs, codes, key prefixes) is mono. Everything else is Manrope or Sora.", "section": "typography" },
+      { "name": "The Tabular Rule", "body": "Numbers that line up or change (counts, codes, timers) use tabular figures.", "section": "typography" },
+      { "name": "The Theme Personality Rule", "body": "Light may glow; dark may not. Never add colored glow, blur or aurora motion to dark surfaces.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep every neutral tinted toward amber (hue 50–80) and use the Masala Amber accent on one primary action per screen.",
+      "Do use the 44px control height for all buttons and inputs so rows align.",
+      "Do write endpoints, IDs and codes in mono with tabular figures.",
+      "Do give dark mode its own flat treatment: hairline borders, solid fills, no blur or glow.",
+      "Do honor prefers-reduced-motion: stop aurora, float, marquee and animated gradient."
+    ],
+    "donts": [
+      "Don't use cold enterprise-security imagery (shields, padlocks, navy and teal, compliance-badge walls).",
+      "Don't use generic SaaS gradients, purple-blue washes or glassmorphism as decoration.",
+      "Don't use hacker-terminal tropes: neon green on black, matrix rain.",
+      "Don't spread the chai gradient beyond the CTA, the active nav indicator, avatars and one key heading word.",
+      "Don't invent customers, logos, stats or compliance badges in the interface (see PRODUCT.md)."
+    ]
+  }
+}

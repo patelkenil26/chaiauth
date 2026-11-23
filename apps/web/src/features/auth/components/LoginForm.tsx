@@ -49,7 +49,11 @@ export function LoginForm() {
           </p>
         </div>
         <form onSubmit={onMfaSubmit} className="space-y-4">
+          <label htmlFor="mfa-code" className="block text-[0.8rem] font-medium text-text-soft">
+            Authentication code
+          </label>
           <input
+            id="mfa-code"
             type="text"
             placeholder="000000"
             inputMode="numeric"
@@ -100,12 +104,13 @@ export function LoginForm() {
               autoComplete="email"
               placeholder="you@company.com"
               aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? `${emailId}-error` : undefined}
               className={`ca-input ${errors.email ? "border-destructive" : ""}`}
               {...register("email")}
             />
           </div>
           {errors.email && (
-            <p className="text-[0.78rem] text-destructive ca-fade-up">
+            <p id={`${emailId}-error`} role="alert" className="text-[0.78rem] text-destructive ca-fade-up">
               {errors.email.message}
             </p>
           )}
@@ -128,6 +133,7 @@ export function LoginForm() {
               autoComplete="current-password"
               placeholder="••••••••"
               aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? `${passId}-error` : undefined}
               className={`ca-input pr-11 ${errors.password ? "border-destructive" : ""}`}
               {...register("password")}
             />
@@ -135,13 +141,14 @@ export function LoginForm() {
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition hover:bg-accent hover:text-foreground"
+              aria-pressed={showPassword}
+              className="absolute right-0 top-0 grid h-11 w-11 place-items-center rounded-[.85rem] text-muted-foreground transition hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-[0.78rem] text-destructive ca-fade-up">
+            <p id={`${passId}-error`} role="alert" className="text-[0.78rem] text-destructive ca-fade-up">
               {errors.password.message}
             </p>
           )}

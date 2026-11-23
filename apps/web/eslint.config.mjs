@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored third-party kit (Stageshow); not linted against this app's rules.
+    "src/features/marketing/stageshow/kit/**",
   ]),
 ]);
 

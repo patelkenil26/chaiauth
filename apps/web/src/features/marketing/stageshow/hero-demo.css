@@ -1,0 +1,336 @@
+/* ChaiAuth hero demo. Everything is scoped under .cd. */
+
+/* The page is the ground: no plate behind the window. */
+.cd {
+  margin-top: 4rem;
+  max-width: 64rem;
+  margin-inline: auto;
+}
+
+.cd .ss-stage {
+  --gutter: 32px;
+  overflow: hidden;
+  background: transparent;
+  border-radius: 20px;
+
+  /* ChaiAuth's look, mapped from globals.css */
+  --ss-accent: oklch(0.6 0.18 46);
+  --ss-accent-2: oklch(0.52 0.17 38);
+  --ss-font: "Manrope", system-ui, sans-serif;
+  --ss-radius-md: 10px;
+  --ss-radius-lg: 14px;
+  --ss-control: 44px;
+}
+
+/* Warm surfaces that lift off the page instead of sinking into it */
+.cd .ss-stage[data-theme="dark"] {
+  --ss-surface: oklch(0.21 0.009 55);
+  --ss-canvas: oklch(0.17 0.007 55);
+  --ss-chrome: oklch(0.19 0.008 55);
+  --ss-line: oklch(1 0 0 / 0.1);
+  --ss-line-faint: oklch(1 0 0 / 0.06);
+  --ss-accent: oklch(0.66 0.17 47);
+}
+
+.cd .ss-stage[data-theme="light"] {
+  --ss-surface: oklch(0.995 0.005 80);
+  --ss-canvas: oklch(0.965 0.012 78);
+  --ss-chrome: oklch(0.975 0.01 78);
+}
+
+/* The primary button wears the site's chai gradient */
+.cd .ss-button[data-variant="primary"] {
+  background: linear-gradient(105deg, oklch(0.74 0.14 66) 0%, oklch(0.66 0.18 50) 45%, oklch(0.54 0.17 40) 100%);
+  color: oklch(0.99 0.01 80);
+  text-shadow: 0 1px 0 oklch(0.3 0.1 40 / 0.35);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.3), 0 10px 22px -12px oklch(0.55 0.18 45 / 0.8);
+}
+
+/* Pinned top-left, runs off the bottom; the phone straddles its right edge. */
+.cd-window {
+  position: absolute;
+  top: 28px;
+  left: var(--gutter);
+  width: 580px;
+  height: 520px;
+  border-radius: 14px;
+  box-shadow: var(--ss-shadow-hero), 0 0 0 1px var(--ss-line);
+}
+
+.cd .ss-states,
+.cd .ss-states__item {
+  width: 100%;
+  height: 100%;
+}
+
+.cd-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ss-surface);
+}
+
+/* Centered flows keep clear of the phone: centered in the window's left 430px */
+.cd-view--center {
+  align-items: center;
+  box-sizing: border-box;
+  padding: 52px 148px 0 0;
+  text-align: center;
+}
+
+.cd-brand {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  color: var(--ss-text-strong);
+}
+
+.cd-sub {
+  margin: 6px 0 26px;
+  font-size: 13px;
+  color: var(--ss-text-faint);
+}
+
+.cd-sso {
+  width: 232px;
+}
+
+.cd-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 232px;
+  margin: 18px 0;
+  font-size: 11px;
+  color: var(--ss-text-faint);
+}
+
+.cd-or span {
+  flex: 1;
+  height: 1px;
+  background: var(--ss-line);
+}
+
+.cd-or i {
+  font-style: normal;
+}
+
+.cd-field {
+  display: flex;
+  align-items: center;
+  width: 232px;
+  height: 40px;
+  margin-bottom: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--ss-line);
+  border-radius: 10px;
+}
+
+.cd-title {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--ss-text-strong);
+}
+
+.cd-scopes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 280px;
+  margin: 22px 0 26px;
+  padding: 0;
+  list-style: none;
+}
+
+.cd-scope {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--ss-line);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--ss-text);
+  text-align: left;
+}
+
+.cd-tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ss-success-soft);
+  color: var(--ss-success-text);
+}
+
+.cd-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Signed-in view: left-aligned, clear of the phone (content ends before x = 440) */
+.cd-view--app {
+  gap: 20px;
+  box-sizing: border-box;
+  padding: 26px 148px 0 28px;
+}
+
+.cd-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cd-welcome {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--ss-text-strong);
+}
+
+.cd-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 8px;
+  border: 1px solid var(--ss-line);
+  border-radius: 12px;
+  background: var(--ss-canvas);
+}
+
+.cd-panel-title {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ss-text-faint);
+}
+
+.cd-fact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  border-top: 1px solid var(--ss-line-faint);
+  font-size: 13px;
+}
+
+.cd-panel-title + .cd-fact {
+  border-top: 0;
+}
+
+.cd-fact-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--ss-accent-soft);
+  color: var(--ss-accent-text);
+}
+
+.cd-fact-label {
+  color: var(--ss-text);
+}
+
+.cd-fact-value {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--ss-text-strong);
+}
+
+.cd-rows {
+  border-top: 1px solid var(--ss-line);
+}
+
+.cd-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  border-bottom: 1px solid var(--ss-line-faint);
+}
+
+.cd-phone {
+  position: absolute;
+  top: 72px;
+  right: 24px;
+  box-shadow: var(--ss-shadow-satellite), 0 30px 50px -20px rgba(0, 0, 0, 0.5);
+}
+
+.cd-rest {
+  position: absolute;
+  left: 330px;
+  top: 372px;
+  width: 1px;
+  height: 1px;
+}
+
+/* Narrow: the window runs off the right; the phone stands below the content
+   and its notification stays whole. */
+.cd .ss-stage[data-layout="compact"] {
+  --gutter: 16px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-window {
+  top: 20px;
+  width: 396px;
+  height: 640px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-view--center {
+  align-items: flex-start;
+  padding: 30px 0 0 20px;
+  text-align: left;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-sub {
+  margin-bottom: 18px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-or {
+  margin: 12px 0;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-field:nth-of-type(2) {
+  display: none;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-scopes {
+  width: 300px;
+  gap: 6px;
+  margin: 16px 0 18px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-scope {
+  min-height: 36px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-view--app {
+  gap: 14px;
+  padding: 20px 56px 0 20px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-fact {
+  height: 36px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-rows {
+  display: none;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-phone {
+  top: 372px;
+  right: 22px;
+}
+
+.cd .ss-stage[data-layout="compact"] .cd-rest {
+  left: 150px;
+  top: 300px;
+}
